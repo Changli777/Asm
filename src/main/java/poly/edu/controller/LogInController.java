@@ -63,7 +63,8 @@ public class LogInController {
 
     // ===== Đăng nhập bằng Google =====
     @PostMapping("/login/google")
-    public String loginWithGoogle(@RequestParam("credential") String idTokenString, HttpSession session, Model model)
+    public String loginWithGoogle(@RequestParam("credential") String idTokenString,
+                                  HttpSession session, Model model)
             throws GeneralSecurityException, IOException {
 
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
@@ -79,6 +80,7 @@ public class LogInController {
 
             String email = payload.getEmail();
             String name = (String) payload.get("name");
+            String googleId = payload.getSubject();
 
             // Kiểm tra user đã tồn tại chưa
             Optional<User> optionalUser = userDAO.findByEmail(email);
@@ -87,18 +89,21 @@ public class LogInController {
             if (optionalUser.isPresent()) {
                 user = optionalUser.get();
             } else {
-                // Nếu chưa có thì tạo mới tài khoản Google
+                // Tạo user mới nếu chưa có
                 user = new User();
                 user.setUsername(email.split("@")[0]);
                 user.setEmail(email);
-                user.setFullName(name);
-                user.setPassword(""); // để trống vì đăng nhập qua Google
+                user.setFullName(name != null ? name : email.split("@")[0]);
+                user.setPassword(""); // không dùng cho Google login
+                user.setGender(true); // mặc định true (hoặc false tùy bạn)
+                user.setRole("USER");
+                user.setProvider("GOOGLE");
+                user.setProviderId(googleId);
                 userDAO.add(user);
             }
 
-            // Lưu session đăng nhập
+            // Lưu session
             session.setAttribute("currentUser", user);
-
             return "redirect:/home";
         } else {
             model.addAttribute("error", "Đăng nhập Google thất bại!");
