@@ -21,6 +21,8 @@ import java.util.Optional;
 @Controller
 public class LogInController {
 
+    //Link: http://localhost:8080/login
+
     @Autowired
     private UserDAO userDAO;
 

@@ -14,6 +14,8 @@ import poly.edu.entity.User;
 @Controller
 public class RegisterController {
 
+    //Link: http://localhost:8080/register
+
     @Autowired
     private UserDAO userDAO;
 

@@ -15,6 +15,8 @@ import java.util.List;
 @Controller
 public class HomeController {
 
+    //Link: http://localhost:8080/home
+
     @Autowired
     private CategoryDAO categoryDAO;
 
