@@ -1,6 +1,8 @@
 package poly.edu.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,18 +22,23 @@ public class Product {
     @Column(name = "product_id")
     private Long productId;
 
+    @NotNull(message = "Chưa nhập tên sản phẩm")
     @Column(name = "product_name", nullable = false, length = 200)
     private String productName;
 
     @Column(name = "description", length = 2000)
     private String description;
 
+    @NotNull(message = "Chưa nhập giá sản phẩm")
+    @Min(value = 1000, message = "Giá sản phẩm tối thiểu là 1000")
     @Column(name = "price", nullable = false, precision = 18, scale = 2)
     private BigDecimal price;
 
     @Column(name = "discount_price", precision = 18, scale = 2)
     private BigDecimal discountPrice;
 
+    @NotNull(message = "Chưa nhập số lượng sản phẩm")
+    @Min(value = 1, message = "Số lượng sản phẩm tối thiểu là 1")
     @Column(name = "stock_quantity")
     private Integer stockQuantity;
 

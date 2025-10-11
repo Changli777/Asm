@@ -1,6 +1,7 @@
 package poly.edu.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,7 @@ public class Category {
     @Column(name = "category_id")
     private Long categoryId;
 
+    @NotNull(message = "Chưa nhập tên category")
     @Column(name = "category_name", nullable = false, length = 100)
     private String categoryName;
 

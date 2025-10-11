@@ -3,8 +3,9 @@ package poly.edu.dao.impl;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.annotation.SessionScope;
 import poly.edu.dao.ProductDAO;
 import poly.edu.entity.Product;
 
@@ -12,7 +13,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
+@Service
+@SessionScope
 @Transactional
 public class ProductDAOImpl implements ProductDAO {
 
@@ -167,5 +169,27 @@ public class ProductDAOImpl implements ProductDAO {
                 .setParameter("id", productId)
                 .setParameter("quantity", quantity)
                 .executeUpdate();
+    }
+
+    // ----- Implementations added for no-argument methods -----
+    @Override
+    public List<Product> findNewProducts() {
+        String jpql = "SELECT p FROM Product p WHERE p.isNew = true ORDER BY p.createdAt DESC";
+        TypedQuery<Product> query = entityManager.createQuery(jpql, Product.class);
+        return query.getResultList();
+    }
+
+    @Override
+    public List<Product> findSaleProducts() {
+        String jpql = "SELECT p FROM Product p WHERE p.isOnSale = true ORDER BY p.createdAt DESC";
+        TypedQuery<Product> query = entityManager.createQuery(jpql, Product.class);
+        return query.getResultList();
+    }
+
+    @Override
+    public List<Product> findFeaturedProducts() {
+        String jpql = "SELECT p FROM Product p WHERE p.isFeatured = true ORDER BY p.soldCount DESC";
+        TypedQuery<Product> query = entityManager.createQuery(jpql, Product.class);
+        return query.getResultList();
     }
 }

@@ -5,13 +5,22 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import poly.edu.dao.UserDAO;
+import poly.edu.dto.LoginForm;
 import poly.edu.entity.User;
+import poly.edu.service.CookieService;
+import poly.edu.service.ParamService;
+import poly.edu.service.SessionService;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -22,44 +31,82 @@ import java.util.Optional;
 public class LogInController {
 
     //Link: http://localhost:8080/login
-
+    @Autowired
+    private ParamService paramService;
+    @Autowired
+    private CookieService cookieService;
+    @Autowired
+    private SessionService sessionService;
     @Autowired
     private UserDAO userDAO;
 
     @GetMapping("/login")
-    public String showLoginPage() {
-        return "login"; // trỏ tới file login.html trong templates
+    public String showLoginPage(Model model) {
+        LoginForm loginForm = new LoginForm();
+
+        // Nếu có cookie "user" (cookie lưu username) thì tiền điền username
+        String remembered = cookieService.getValue("user");
+        if (remembered != null && !remembered.isBlank()) {
+            loginForm.setUsername(remembered);
+            loginForm.setRemember(true);
+        }
+        model.addAttribute("loginForm", loginForm);
+        model.addAttribute("user", new poly.edu.entity.User());
+        return "login";
     }
 
-    // ===== Đăng nhập tài khoản bình thường =====
     @PostMapping("/login")
     public String login(
-            @RequestParam("username") String username,
-            @RequestParam("password") String password,
-            HttpSession session,
+            @Valid @ModelAttribute("loginForm") LoginForm loginForm,
+            BindingResult bindingResult,
             Model model
     ) {
-        Optional<User> optionalUser = userDAO.findByUsername(username);
+        // nếu có lỗi validation -> trả về trang login để hiển thị message từ DTO
+        if (bindingResult.hasErrors()) {
+            // đảm bảo model có attribute cần thiết cho template
+            model.addAttribute("loginForm", loginForm);
+            model.addAttribute("user", new poly.edu.entity.User());
+            return "login";
+        }
+
+        String identifier = loginForm.getUsername().trim();
+        String password = loginForm.getPassword();
+
+        // tìm user bằng username OR email OR phone
+        Optional<User> optionalUser = userDAO.findByUsernameOrEmailOrPhone(identifier, identifier, identifier);
 
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
-            if (user.getPassword().equals(password)) {
-                session.setAttribute("currentUser", user);
+            if (user.getPassword() != null && user.getPassword().equals(password)) {
+                // Lưu session: sử dụng SessionService
+                sessionService.set("currentUser", user);
+                // xử lý remember cookie
+                if (loginForm.isRemember()) {
+                    cookieService.add("user", user.getUsername(), 24);
+                } else {
+                    cookieService.remove("user");
+                }
                 return "redirect:/home";
             } else {
                 model.addAttribute("error", "Sai mật khẩu!");
+                model.addAttribute("loginForm", loginForm);
+                model.addAttribute("user", new poly.edu.entity.User());
+                return "login";
             }
         } else {
             model.addAttribute("error", "Tài khoản không tồn tại!");
+            model.addAttribute("loginForm", loginForm);
+            model.addAttribute("user", new poly.edu.entity.User());
+            return "login";
         }
-
-        return "login";
     }
 
     // ===== Đăng xuất =====
     @PostMapping("/logout")
-    public String logout(HttpSession session) {
-        session.invalidate();
+    public String logout(Model model) {
+        sessionService.remove("username");
+        cookieService.remove("user");
+        model.addAttribute("message", "Đăng xuất thành công!");
         return "redirect:/login";
     }
 

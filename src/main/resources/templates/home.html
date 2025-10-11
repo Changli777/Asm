@@ -39,30 +39,29 @@
 </head>
 <body>
 <!-- Header Fragment -->
-<div th:replace="~{fragments :: header}"></div>
+<div th:replace="~{fragments/fragments :: header}"></div>
 
 <!-- Search & Filter Fragment -->
-<div th:replace="~{fragments :: searchFilter}"></div>
+<div th:replace="~{fragments/fragments :: searchFilter}"></div>
 
 <div class="container">
-    <!-- Hàng mới -->
-    <div th:replace="~{fragments :: productGrid(${newProducts}, 'Hàng mới')}"></div>
+    <!-- Row 1: New -->
+    <div th:replace="~{fragments/productGrid :: productGrid(${newProductsPage}, 'Mới', ${newPrevUrl}, ${newNextUrl})}"></div>
 
-    <!-- Sản phẩm giảm giá -->
-    <div th:replace="~{fragments :: productGrid(${saleProducts}, 'Giảm giá sốc')}"></div>
+    <!-- Row 2: Sale -->
+    <div th:replace="~{fragments/productGrid :: productGrid(${saleProductsPage}, 'Giảm giá', ${salePrevUrl}, ${saleNextUrl})}"></div>
 
-    <!-- Sản phẩm bán chạy -->
-    <div th:replace="~{fragments :: productGrid(${hotProducts}, 'Bán chạy nhất')}"></div>
+    <!-- Row 3: Featured/Hot -->
+    <div th:replace="~{fragments/productGrid :: productGrid(${hotProductsPage}, 'Nổi bật', ${hotPrevUrl}, ${hotNextUrl})}"></div>
+
+
+
 </div>
 
 <!-- Footer Fragment -->
 <footer>
-    <div th:replace="~{fragments :: footer}"></div>
+    <div th:replace="~{fragments/fragments :: footer}"></div>
 </footer>
 
-<script>
-    // Không có code xử lý nghiệp vụ
-    // Tất cả logic sẽ được xử lý ở Spring Boot Controller
-</script>
 </body>
 </html>
