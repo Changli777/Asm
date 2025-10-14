@@ -82,7 +82,7 @@ public class ParamService {
         String ctxPath = request.getServletContext().getRealPath("/");
         if (ctxPath == null) {
             // fallback: dùng user.dir
-            ctxPath = System.getProperty("user.dir") + File.separator;
+            ctxPath = System.getProperty("user.dir") + "/src/resources/static/photos";
         }
 
         // chuẩn hóa path
