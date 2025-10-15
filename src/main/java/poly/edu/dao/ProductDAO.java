@@ -12,7 +12,7 @@ public interface ProductDAO extends JpaRepository<Product, Long> {
 
     Optional<Product> findById(Long id);
 
-    Optional<Product> findByName(String name);
+    Optional<Product> findByProductName(String name);
 
     Product save(Product product);
 

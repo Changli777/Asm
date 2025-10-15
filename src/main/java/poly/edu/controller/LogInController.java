@@ -148,7 +148,7 @@ public class LogInController {
                 user.setRole("USER");
                 user.setProvider("GOOGLE");
                 user.setProviderId(googleId);
-                userDAO.add(user);
+                userDAO.save(user);
             }
 
             // Lưu session

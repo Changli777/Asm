@@ -11,7 +11,7 @@ public interface CategoryDAO extends JpaRepository<Category,Long> {
 
     Optional<Category> findById(Long id);
 
-    Optional<Category> findByName(String name);
+    Optional<Category> findByCategoryName(String categoryName);
 
     Category save(Category category);
 
