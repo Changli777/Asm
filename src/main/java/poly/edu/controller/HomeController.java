@@ -159,8 +159,8 @@ public class HomeController {
 
     private void setCategoryNameIfPresent(Product product) {
         if (product == null) return;
-        if (product.getCategoryId() != null) {
-            categoryDAO.findById(product.getCategoryId()).ifPresent(category -> {
+        if (product.getProductId() != null) {
+            categoryDAO.findById(product.getProductId()).ifPresent(category -> {
                 product.setCategoryName(category.getCategoryName());
             });
         }

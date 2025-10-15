@@ -1,28 +1,34 @@
 package poly.edu.dao;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import poly.edu.entity.Product;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-public interface ProductDAO {
+public interface ProductDAO extends JpaRepository<Product, Long> {
 
     List<Product> findAll();
+
     Optional<Product> findById(Long id);
-    List<Product> findByCategoryId(Long categoryId);
-    List<Product> findByNameContaining(String keyword);
-    List<Product> findNewProducts(int limit);
-    List<Product> findSaleProducts(int limit);
-    List<Product> findFeaturedProducts(int limit);
-    List<Product> findByPriceRange(BigDecimal minPrice, BigDecimal maxPrice);
-    List<Product> searchProducts(String keyword, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice);
+
+    Optional<Product> findByName(String name);
+
     Product save(Product product);
+
     void deleteById(Long id);
+
     boolean existsById(Long id);
+
     long count();
-    void incrementViewCount(Long productId);
-    void incrementSoldCount(Long productId, int quantity);
+
+    @Query("SELECT p FROM Product p ORDER BY p.createdAt DESC")
     List<Product> findNewProducts();
+
+    @Query("SELECT p FROM Product p WHERE p.discountPrice > 0 ORDER BY p.discountPrice DESC")
     List<Product> findSaleProducts();
+
+    @Query("SELECT p FROM Product p WHERE p.isFeatured = true")
     List<Product> findFeaturedProducts();
+
 }

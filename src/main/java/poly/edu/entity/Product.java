@@ -42,8 +42,9 @@ public class Product {
     @Column(name = "stock_quantity")
     private Integer stockQuantity;
 
-    @Column(name = "category_id", nullable = false)
-    private Long categoryId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
     @Column(name = "is_featured")
     private Boolean isFeatured;
@@ -85,7 +86,6 @@ public class Product {
         updatedAt = LocalDateTime.now();
     }
 
-    // Transient field - không lưu vào DB
     @Transient
     private String categoryName; // Dùng để hiển thị tên category
 
@@ -103,10 +103,16 @@ public class Product {
     // Method tính % giảm giá
     public Integer getDiscountPercent() {
         if (discountPrice != null && discountPrice.compareTo(BigDecimal.ZERO) > 0 && price != null) {
-            BigDecimal discount = price.subtract(discountPrice);
-            BigDecimal percent = discount.divide(price, 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
+            java.math.BigDecimal discount = price.subtract(discountPrice);
+            java.math.BigDecimal percent = discount.divide(price, 2, java.math.BigDecimal.ROUND_HALF_UP).multiply(new java.math.BigDecimal(100));
             return percent.intValue();
         }
         return 0;
+    }
+
+    // helper để lấy tên category dễ dùng trong view (tránh NPE nếu lazy)
+    public String getCategoryName() {
+        if (category != null) return category.getCategoryName();
+        return categoryName;
     }
 }
