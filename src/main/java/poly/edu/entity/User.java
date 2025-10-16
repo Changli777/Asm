@@ -71,6 +71,9 @@ public class User {
     @Column(name = "password_reset_token", length = 255)
     private String passwordResetToken;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<CartItem> cartItems = new java.util.ArrayList<>();
+
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 

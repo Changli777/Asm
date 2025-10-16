@@ -64,6 +64,9 @@ public class Product {
     @Column(name = "sold_count")
     private Integer soldCount;
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<CartItem> cartItems = new java.util.ArrayList<>();
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

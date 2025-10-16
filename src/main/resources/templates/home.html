@@ -11,19 +11,14 @@
             box-sizing: border-box;
         }
 
-        html {
+        html, body {
             height: 100%;
-        }
-
-        body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f5f5f5;
-            min-height: 100%;
             display: flex;
             flex-direction: column;
         }
 
-        /* Main Container */
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -31,35 +26,175 @@
             flex: 1;
         }
 
-        /* Footer wrapper */
         footer {
             margin-top: auto;
         }
+
+        /* ========== CART OVERLAY + PANEL ========== */
+        #cart-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1200;
+        }
+        #cart-overlay.hidden {
+            display: none;
+        }
+        #cart-overlay.show {
+            opacity: 1;
+        }
+
+        #cart-panel {
+            position: fixed;
+            top: 0;
+            right: -420px;
+            width: 400px;
+            height: 100%;
+            background: #fff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.25);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            z-index: 1250;
+            padding: 20px;
+        }
+        #cart-panel.hidden {
+            display: none;
+        }
+        #cart-panel.show {
+            right: 0;
+        }
+
+        .cart-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
-<!-- Header Fragment -->
+<!-- Header -->
 <div th:replace="~{fragments/fragments :: header}"></div>
 
-<!-- Search & Filter Fragment -->
+<!-- Search & Filter -->
 <div th:replace="~{fragments/fragments :: searchFilter}"></div>
 
 <div class="container">
     <!-- Row 1: New -->
     <div th:replace="~{fragments/productGrid :: productGrid(${newProductsPage}, 'Mới', ${newPrevUrl}, ${newNextUrl})}"></div>
-
     <!-- Row 2: Sale -->
     <div th:replace="~{fragments/productGrid :: productGrid(${saleProductsPage}, 'Giảm giá', ${salePrevUrl}, ${saleNextUrl})}"></div>
-
     <!-- Row 3: Featured/Hot -->
     <div th:replace="~{fragments/productGrid :: productGrid(${hotProductsPage}, 'Nổi bật', ${hotPrevUrl}, ${hotNextUrl})}"></div>
 
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <div th:if="${message}">
+        <script th:inline="javascript">
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công!',
+                text: [[${message}]],
+                showConfirmButton: false,
+                timer: 1800
+            });
+        </script>
+    </div>
+
+    <div th:if="${error}">
+        <script th:inline="javascript">
+            Swal.fire({
+                icon: 'error',
+                title: 'Thất bại!',
+                text: [[${error}]],
+                showConfirmButton: true
+            });
+        </script>
+    </div>
 </div>
 
-<!-- Footer Fragment -->
+<!-- Overlay & panel -->
+<div id="cart-overlay" class="hidden"></div>
+<div id="cart-panel" class="hidden"></div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        console.log("[cart] Ready");
+
+        const overlay = document.getElementById("cart-overlay");
+        const panel = document.getElementById("cart-panel");
+
+        // cập nhật số lượng giỏ hàng
+        updateCartCount();
+
+        function updateCartCount() {
+            fetch("/cart/count")
+                .then(res => res.text())
+                .then(count => {
+                    const badge = document.getElementById("cart-count");
+                    if (badge) badge.textContent = count;
+                })
+                .catch(() => console.error("[cart] Không thể lấy số lượng giỏ hàng"));
+        }
+
+        // khi click icon giỏ hàng trong header
+        document.body.addEventListener("click", function(e) {
+            const icon = e.target.closest(".cart-icon-header");
+            if (!icon) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            console.log("[cart] Icon clicked, loading fragment...");
+
+            fetch("/cart")
+                .then(res => res.text())
+                .then(html => {
+                    panel.innerHTML = html;
+                    overlay.classList.remove("hidden");
+                    panel.classList.remove("hidden");
+                    requestAnimationFrame(() => {
+                        overlay.classList.add("show");
+                        panel.classList.add("show");
+                    });
+                })
+                .catch(err => console.error("[cart] Lỗi khi load fragment:", err));
+        });
+
+        // đóng khi click ra ngoài
+        overlay.addEventListener("click", closeCart);
+
+        // đóng khi bấm nút X
+        panel.addEventListener("click", e => {
+            if (e.target.classList.contains("cart-close-btn") || e.target.classList.contains("close-cart")) {
+                closeCart();
+            }
+        });
+
+        // ESC để đóng
+        document.addEventListener("keydown", e => {
+            if (e.key === "Escape") closeCart();
+        });
+
+        function closeCart() {
+            overlay.classList.remove("show");
+            panel.classList.remove("show");
+            setTimeout(() => {
+                overlay.classList.add("hidden");
+                panel.classList.add("hidden");
+            }, 300);
+        }
+    });
+</script>
+
 <footer>
     <div th:replace="~{fragments/fragments :: footer}"></div>
 </footer>
-
 </body>
 </html>

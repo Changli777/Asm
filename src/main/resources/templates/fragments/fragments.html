@@ -26,11 +26,15 @@
                         <a th:href="@{/login}" class="btn-auth-header btn-login-header">Đăng nhập</a>
                         <a th:href="@{/register}" class="btn-auth-header btn-register-header">Đăng ký</a>
                     </div>
-                    <a th:href="@{/cart}" class="cart-icon-header">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                    <a th:href="@{/cart}" class="cart-icon-header" aria-label="Giỏ hàng">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="cart-svg" aria-hidden="true">
+                            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45
+                                c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45
+                                c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16
+                                16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
                         </svg>
-                        <span class="cart-badge-header">0</span>
+                        <span id="cart-count" class="cart-count-badge"
+                              th:text="${session.currentUser != null ? session.cartCount : 0}">0</span>
                     </a>
                 </div>
 
@@ -70,11 +74,15 @@
                     </div>
 
                     <!-- Cart Icon -->
-                    <a th:href="@{/cart}" class="cart-icon-header">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                    <a th:href="@{/cart}" class="cart-icon-header" aria-label="Giỏ hàng">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="cart-svg" aria-hidden="true">
+                            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45
+                                c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45
+                                c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16
+                                16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
                         </svg>
-                        <span class="cart-badge-header">0</span>
+                        <span id="cart-count" class="cart-count-badge"
+                              th:text="${session.currentUser != null ? session.cartCount : 0}">0</span>
                     </a>
                 </div>
 
@@ -126,12 +134,16 @@
                     </div>
 
                     <!-- Cart Icon -->
-                    <a th:href="@{/cart}" class="cart-icon-header">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                    <a th:href="@{/cart}" class="cart-icon-header" aria-label="Giỏ hàng">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="cart-svg" aria-hidden="true">
+                            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45
+                                c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45
+                                c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16
+                                16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
                         </svg>
-                        <span class="cart-badge-header">0</span>
-                    </a>
+                        <span id="cart-count" class="cart-count-badge"
+                              th:text="${session.currentUser != null ? session.cartCount : 0}">0</span>
+                        </a>
                 </div>
             </div>
         </div>
@@ -331,20 +343,6 @@
         }
 
         /* ============ CART ICON ============ */
-        .cart-icon-header {
-            background-color: white;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            transition: all 0.3s;
-            text-decoration: none;
-            flex-shrink: 0;
-        }
-
         .cart-icon-header:hover {
             transform: scale(1.1);
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
@@ -356,22 +354,65 @@
             fill: #667eea;
         }
 
-        .cart-badge-header {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background-color: #ff4757;
-            color: white;
-            min-width: 22px;
-            height: 22px;
-            border-radius: 11px;
-            display: flex;
+        .cart-icon-header svg {
+            width: 32px;
+            height: 32px;
+            fill: #fff; /* hoặc màu bạn muốn */
+        }
+
+        /* Cart icon wrapper */
+        .cart-icon-header {
+            position: relative;         /* reference for badge */
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-            padding: 0 6px;
+            width: 44px;                /* clickable area */
+            height: 44px;
+            padding: 6px;               /* make it comfy to click */
+            background: transparent;    /* <-- remove white circle */
+            border-radius: 8px;         /* subtle rounding if you want a background later */
+            text-decoration: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            color: inherit;
         }
+
+        /* hover effect (subtle) */
+        .cart-icon-header:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+        }
+
+        /* the SVG icon inside */
+        .cart-icon-header .cart-svg {
+            width: 28px;
+            height: 28px;
+            fill: white;                /* white icon on purple header — change if needed */
+            display: block;
+        }
+
+        /* badge (small red circle top-right) */
+        .cart-count-badge {
+            position: absolute;
+            top: 6px;                   /* tweak this to move vertically */
+            right: 6px;                 /* tweak horizontally */
+            background: #ff4757;        /* red */
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            border-radius: 50%;
+            padding: 3px 6px;           /* pill shape for 2+ digits */
+            min-width: 18px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            pointer-events: none;       /* clicks pass through badge to link */
+        }
+
+        /* if count is 0, hide badge (optional) */
+        .cart-count-badge.hidden {
+            display: none;
+        }
+
     </style>
 
     <script>
