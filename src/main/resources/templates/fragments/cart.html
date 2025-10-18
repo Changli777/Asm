@@ -2,106 +2,46 @@
     <section class="cart-panel-content">
         <div class="cart-header">
             <h2>Giỏ hàng</h2>
-            <button class="cart-close-btn close-cart">&times;</button>
+            <button class="cart-close-btn close-cart" type="button">&times;</button>
         </div>
 
         <div class="cart-content" id="cart-items">
-            <div th:each="item : ${cartItems}" class="cart-item" th:id="'item-' + ${item.cartItemId}">
-                <input type="checkbox" class="item-checkbox" checked>
+            <div th:each="item : ${cartItems}" class="cart-item">
+                <input type="checkbox" name="selectedItems" checked>
                 <img th:src="@{'/photos/' + ${item.product.imageUrl}}" alt="image" class="cart-item-image">
                 <div class="cart-item-info">
                     <h4 th:text="${item.product.productName}"></h4>
-                    <p class="cart-item-price" th:text="${item.product.discountPrice != null ? item.product.discountPrice : item.product.price}"></p>
+                    <p class="cart-item-price"
+                       th:text="${item.product.discountPrice != null ? item.product.discountPrice : item.product.price} + ' VND'"></p>
                     <p>
-                        Số lượng: <input type="number" min="1" class="item-quantity" th:value="${item.quantity}" th:data-id="${item.cartItemId}">
+                        Số lượng:
+                        <input type="number" min="1" th:value="${item.quantity}" readonly>
                     </p>
                 </div>
-                <div class="cart-item-total-price" th:text="(${item.product.discountPrice != null ? item.product.discountPrice : item.product.price}) * ${item.quantity} + ' VND'"></div>
-                <button class="btn-remove" th:data-id="${item.cartItemId}">×</button>
+                <div class="cart-item-total-price"
+                     th:text="(${item.product.discountPrice != null ? item.product.discountPrice : item.product.price}) * ${item.quantity} + ' VND'">
+                </div>
+
+                <form th:action="@{'/cart/remove/' + ${item.cartItemId}}" method="post" style="display:inline;">
+                    <button type="submit" class="btn-remove">×</button>
+                </form>
             </div>
         </div>
 
         <div class="cart-footer">
-            <input type="checkbox" id="select-all" checked> Chọn tất cả
-            <button id="clear-cart">Xoá tất cả</button>
-            <span>Tổng cộng: <span id="cart-total">0 VND</span></span>
-            <button id="checkout">Thanh toán</button>
+            <form th:action="@{/cart/clear}" method="post" style="display:inline;">
+                <button id="clear-cart" type="submit" onclick="return confirm('Bạn có chắc muốn xoá tất cả sản phẩm trong giỏ hàng?');">
+                    Xoá tất cả
+                </button>
+            </form>
+
+            <span>Tổng cộng:
+                <span th:text="${totalPrice} + ' VND'">0 VND</span>
+            </span>
+
+            <form th:action="@{/checkout}" method="post" style="display:inline;">
+                <button id="checkout" type="submit">Thanh toán</button>
+            </form>
         </div>
     </section>
 </div>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const formatVND = (num) => new Intl.NumberFormat('vi-VN').format(num) + ' VND';
-
-        function updateTotal() {
-            let total = 0;
-            document.querySelectorAll(".cart-item").forEach(item => {
-                if (item.querySelector(".item-checkbox").checked) {
-                    const totalText = item.querySelector(".cart-item-total-price").textContent.replace(/\D/g,'');
-                    total += parseFloat(totalText);
-                }
-            });
-            document.getElementById("cart-total").textContent = formatVND(total);
-        }
-
-        // Cập nhật số lượng
-        document.querySelectorAll(".item-quantity").forEach(input => {
-            input.addEventListener("change", function() {
-                const id = this.dataset.id;
-                const qty = parseInt(this.value);
-                if (qty <= 0) return;
-
-                fetch(`/cart/update/${id}?quantity=${qty}`, { method: "PUT" })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.totalPrice) {
-                            const itemElem = document.getElementById(`item-${id}`);
-                            itemElem.querySelector(".cart-item-total-price").textContent = data.totalPrice;
-                            updateTotal();
-                        }
-                    });
-            });
-        });
-
-        // Xoá 1 sản phẩm
-        document.querySelectorAll(".btn-remove").forEach(btn => {
-            btn.addEventListener("click", function() {
-                const id = this.dataset.id;
-                fetch(`/cart/remove/${id}`, { method: "DELETE" })
-                    .then(res => {
-                        if (res.ok) {
-                            document.getElementById(`item-${id}`).remove();
-                            updateTotal();
-                        }
-                    });
-            });
-        });
-
-        // Xoá tất cả
-        document.getElementById("clear-cart").addEventListener("click", function() {
-            fetch(`/cart/clear`, { method: "DELETE" })
-                .then(res => {
-                    if (res.ok) {
-                        document.getElementById("cart-items").innerHTML = "";
-                        updateTotal();
-                    }
-                });
-        });
-
-        // Chọn tất cả
-        document.getElementById("select-all").addEventListener("change", function() {
-            const checked = this.checked;
-            document.querySelectorAll(".item-checkbox").forEach(cb => cb.checked = checked);
-            updateTotal();
-        });
-
-        // Tick/un-tick từng item
-        document.querySelectorAll(".item-checkbox").forEach(cb => {
-            cb.addEventListener("change", updateTotal);
-        });
-
-        // Khởi tạo tổng tiền
-        updateTotal();
-    });
-</script>

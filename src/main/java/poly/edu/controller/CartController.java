@@ -98,14 +98,14 @@ public class CartController {
     }
 
     // ----------------------- XOÁ TẤT CẢ -----------------------
-    @DeleteMapping("/cart/clear")
-    @ResponseBody
-    public ResponseEntity<?> clearCart() {
+    @PostMapping("/cart/clear")
+    public String clearCart() {
         User currentUser = sessionService.get("currentUser");
-        if (currentUser == null) return ResponseEntity.badRequest().body("not_logged_in");
+        if (currentUser == null) return "redirect:/login";
         cartItemService.deleteAllByUser(currentUser);
-        return ResponseEntity.ok("cleared");
+        return "redirect:/home"; // hoặc trang nào bạn muốn
     }
+
 
     // ----------------------- CẬP NHẬT SỐ LƯỢNG -----------------------
     @PutMapping("/cart/update/{id}")
