@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shapoo - Giỏ hàng</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            padding-bottom: 100px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+            letter-spacing: 2px;
+            white-space: nowrap;
+        }
+
+        .search-box {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 50px 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 15px;
+            background-color: white;
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: transparent;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        /* Cart Items */
+        .cart-list {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.3s;
+        }
+
+        .cart-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-checkbox {
+            margin-right: 20px;
+        }
+
+        .item-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .item-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 12px;
+            text-align: center;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .item-info {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .item-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .item-seller {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .item-price {
+            font-size: 16px;
+            color: #ff4757;
+            font-weight: 600;
+        }
+
+        .item-quantity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qty-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #e0e0e0;
+            background-color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .qty-btn:hover {
+            background-color: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .qty-input {
+            width: 50px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        .item-total {
+            font-size: 18px;
+            color: #ff4757;
+            font-weight: bold;
+        }
+
+        .item-delete {
+            background-color: transparent;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 5px 10px;
+            transition: color 0.3s;
+        }
+
+        .item-delete:hover {
+            color: #ff4757;
+        }
+
+        /* Empty Cart */
+        .empty-cart {
+            text-align: center;
+            padding: 60px 20px;
+            background-color: white;
+            border-radius: 12px;
+        }
+
+        .empty-cart svg {
+            width: 120px;
+            height: 120px;
+            fill: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .empty-cart h3 {
+            font-size: 24px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .empty-cart p {
+            color: #999;
+            margin-bottom: 20px;
+        }
+
+        .btn-shop-now {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+        .btn-shop-now:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Bottom Navbar */
+        .bottom-navbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .select-all {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .select-all input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .select-all label {
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .btn-delete-selected {
+            padding: 10px 20px;
+            background-color: white;
+            color: #ff4757;
+            border: 2px solid #ff4757;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-delete-selected:hover {
+            background-color: #ff4757;
+            color: white;
+        }
+
+        .spacer {
+            flex: 1;
+        }
+
+        .total-section {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .total-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .total-amount {
+            font-size: 24px;
+            color: #ff4757;
+            font-weight: bold;
+        }
+
+        .btn-checkout {
+            padding: 12px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-checkout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .item-info {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .navbar-content {
+                flex-wrap: wrap;
+            }
+
+            .total-section {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Header -->
+<div class="header">
+    <div class="header-container">
+        <a href="/" class="logo">Shapoo</a>
+        <div class="search-box">
+            <input type="text" class="search-input" placeholder="Tìm kiếm sản phẩm trong giỏ hàng...">
+            <button class="search-btn">🔍</button>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container">
+    <h1 class="page-title">Giỏ hàng của bạn</h1>
+
+    <!-- Cart Items List -->
+    <div class="cart-list">
+        <!-- Cart Item 1 -->
+        <div class="cart-item">
+            <div class="item-checkbox">
+                <input type="checkbox" name="cartItem" value="1">
+            </div>
+            <div class="item-image">iPhone 15</div>
+            <div class="item-info">
+                <div>
+                    <div class="item-name">iPhone 15 Pro Max 256GB</div>
+                    <div class="item-seller">Người bán: Shapoo Official</div>
+                </div>
+                <div class="item-price">28.990.000₫</div>
+                <div class="item-quantity">
+                    <button class="qty-btn">-</button>
+                    <input type="number" class="qty-input" value="1" min="1">
+                    <button class="qty-btn">+</button>
+                </div>
+                <div class="item-total">28.990.000₫</div>
+                <button class="item-delete">🗑️</button>
+            </div>
+        </div>
+
+        <!-- Cart Item 2 -->
+        <div class="cart-item">
+            <div class="item-checkbox">
+                <input type="checkbox" name="cartItem" value="2">
+            </div>
+            <div class="item-image">MacBook Pro</div>
+            <div class="item-info">
+                <div>
+                    <div class="item-name">MacBook Pro M3 14 inch</div>
+                    <div class="item-seller">Người bán: Apple Store</div>
+                </div>
+                <div class="item-price">49.990.000₫</div>
+                <div class="item-quantity">
+                    <button class="qty-btn">-</button>
+                    <input type="number" class="qty-input" value="1" min="1">
+                    <button class="qty-btn">+</button>
+                </div>
+                <div class="item-total">49.990.000₫</div>
+                <button class="item-delete">🗑️</button>
+            </div>
+        </div>
+
+        <!-- Cart Item 3 -->
+        <div class="cart-item">
+            <div class="item-checkbox">
+                <input type="checkbox" name="cartItem" value="3">
+            </div>
+            <div class="item-image">AirPods Pro</div>
+            <div class="item-info">
+                <div>
+                    <div class="item-name">AirPods Pro 2 USB-C</div>
+                    <div class="item-seller">Người bán: Tech World</div>
+                </div>
+                <div class="item-price">5.490.000₫</div>
+                <div class="item-quantity">
+                    <button class="qty-btn">-</button>
+                    <input type="number" class="qty-input" value="2" min="1">
+                    <button class="qty-btn">+</button>
+                </div>
+                <div class="item-total">10.980.000₫</div>
+                <button class="item-delete">🗑️</button>
+            </div>
+        </div>
+
+        <!-- Cart Item 4 -->
+        <div class="cart-item">
+            <div class="item-checkbox">
+                <input type="checkbox" name="cartItem" value="4">
+            </div>
+            <div class="item-image">Samsung S24</div>
+            <div class="item-info">
+                <div>
+                    <div class="item-name">Samsung Galaxy S24 Ultra 256GB</div>
+                    <div class="item-seller">Người bán: Samsung Official</div>
+                </div>
+                <div class="item-price">19.990.000₫</div>
+                <div class="item-quantity">
+                    <button class="qty-btn">-</button>
+                    <input type="number" class="qty-input" value="1" min="1">
+                    <button class="qty-btn">+</button>
+                </div>
+                <div class="item-total">19.990.000₫</div>
+                <button class="item-delete">🗑️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty Cart Template (Hidden by default, show when cart is empty) -->
+    <!--
+    <div class="empty-cart">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+        </svg>
+        <h3>Giỏ hàng trống</h3>
+        <p>Bạn chưa có sản phẩm nào trong giỏ hàng</p>
+        <a href="/" class="btn-shop-now">Mua sắm ngay</a>
+    </div>
+    -->
+</div>
+
+<!-- Bottom Navbar -->
+<div class="bottom-navbar">
+    <div class="navbar-content">
+        <div class="select-all">
+            <input type="checkbox" id="selectAll">
+            <label for="selectAll">Chọn tất cả</label>
+        </div>
+        <button class="btn-delete-selected">Xóa</button>
+        <div class="spacer"></div>
+        <div class="total-section">
+            <div>
+                <div class="total-label">Tổng thanh toán (<span id="selectedCount">0</span> sản phẩm):</div>
+                <div class="total-amount" id="totalAmount">0₫</div>
+            </div>
+            <button class="btn-checkout">Mua hàng</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Không có code xử lý nghiệp vụ
+    // Tất cả logic sẽ được xử lý ở Spring Boot Controller
+</script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shapoo - Đăng nhập</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+            overflow: hidden;
+            max-width: 450px;
+            width: 100%;
+            padding: 50px 40px;
+        }
+
+        .logo-section { text-align: center; margin-bottom: 40px; }
+
+        .logo {
+            font-size: 48px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+
+        .logo-subtitle { color: #666; font-size: 16px; }
+        .form-title { font-size: 28px; color: #333; margin-bottom: 10px; font-weight: 600; }
+        .form-subtitle { color: #666; margin-bottom: 30px; font-size: 14px; }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; margin-bottom: 8px; color: #333; font-size: 14px; font-weight: 500; }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background-color: #f9f9f9;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background-color: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .forgot-password { text-align: center; margin: 20px 0; }
+        .forgot-password a { color: #667eea; text-decoration: none; }
+        .forgot-password a:hover { color: #764ba2; text-decoration: underline; }
+
+        .divider {
+            display: flex; align-items: center;
+            margin: 25px 0; color: #999; font-size: 14px;
+        }
+        .divider::before, .divider::after {
+            content: ''; flex: 1; height: 1px; background-color: #e0e0e0;
+        }
+        .divider span { padding: 0 15px; }
+
+        .register-link { text-align: center; margin-top: 25px; padding-top: 25px; border-top: 1px solid #e0e0e0; color: #666; font-size: 14px; }
+        .register-link a { color: #667eea; text-decoration: none; font-weight: 600; }
+        .register-link a:hover { color: #764ba2; text-decoration: underline; }
+
+        .password-toggle { position: relative; }
+        .password-toggle input { padding-right: 50px; }
+        .toggle-password {
+            position: absolute; right: 15px; top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer; color: #999; font-size: 20px;
+        }
+
+        .toggle-password:hover { color: #667eea; }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <div class="logo-section">
+        <div class="logo">Shapoo</div>
+        <div class="logo-subtitle">Chào mừng trở lại!</div>
+    </div>
+
+    <!-- ✅ Nếu đã đăng nhập -->
+    <div th:if="${session.user != null}" style="text-align:center;">
+        <h2>Xin chào, <span th:text="${session.user.fullName}"></span>!</h2>
+        <p>Bạn đã đăng nhập thành công.</p>
+        <a href="/logout" class="btn-login" style="display:inline-block; width:auto; padding:10px 20px;">Đăng xuất</a>
+    </div>
+
+    <!-- ✅ Nếu CHƯA đăng nhập -->
+    <div th:if="${session.user == null}">
+        <h2 class="form-title">Đăng nhập</h2>
+        <p class="form-subtitle">Đăng nhập để tiếp tục mua sắm</p>
+
+        <form id="loginForm" th:action="@{/login}" method="post">
+            <div class="form-group">
+                <label class="form-label">Tài khoản</label>
+                <input type="text" class="form-input" placeholder="Username, Email hoặc Số điện thoại" name="username" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Mật khẩu</label>
+                <div class="password-toggle">
+                    <input type="password" class="form-input" id="password" placeholder="Nhập mật khẩu" name="password" required>
+                    <span class="toggle-password" onclick="togglePassword()">👁️</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login">Đăng nhập</button>
+
+            <div th:if="${error}" style="color:#c00; margin-top:12px; text-align:center;">
+                <p th:text="${error}"></p>
+            </div>
+        </form>
+
+        <div class="forgot-password">
+            <a href="/forgot-password">Quên mật khẩu?</a>
+        </div>
+
+        <div class="divider"><span>HOẶC</span></div>
+
+        <div id="g_id_onload"
+             data-client_id="977445546861-a4qd0n7au67tl6cpiip1sb1fcgc0cem0.apps.googleusercontent.com"
+             data-context="signin"
+             data-ux_mode="popup"
+             data-callback="handleCredentialResponse"
+             data-auto_select="false"
+             data-itp_support="true">
+        </div>
+
+        <div class="g_id_signin"
+             data-type="standard"
+             data-shape="rectangular"
+             data-theme="outline"
+             data-text="signin_with"
+             data-size="large"
+             data-logo_alignment="left">
+        </div>
+
+        <div class="register-link">
+            Chưa có tài khoản? <a href="/register">Đăng ký ngay</a>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const toggleIcon = document.querySelector('.toggle-password');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.textContent = '🙈';
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.textContent = '👁️';
+        }
+    }
+
+    function handleCredentialResponse(response) {
+        fetch('/login/google', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'credential=' + encodeURIComponent(response.credential)
+        }).then(res => {
+            if (res.redirected) window.location.href = res.url;
+            else alert("Đăng nhập Google thất bại!");
+        }).catch(err => {
+            console.error(err);
+            alert("Lỗi hệ thống khi đăng nhập Google!");
+        });
+    }
+</script>
+</body>
+</html>
