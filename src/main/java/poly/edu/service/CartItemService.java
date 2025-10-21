@@ -17,7 +17,6 @@ public interface CartItemService {
     public void deleteAllByUser(User user);
     void save(CartItem item);
     void deleteById(Long id);
-    public void updateQuantity(Long cartItemId, int newQuantity);
-    public BigDecimal calculateTotal(User user);
     Optional<CartItem> findById(Long id);
+    BigDecimal calculateTotal(User user);
 }

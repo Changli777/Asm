@@ -116,13 +116,6 @@
         <div class="logo-subtitle">Chào mừng trở lại!</div>
     </div>
 
-    <!-- ✅ Nếu đã đăng nhập -->
-    <div th:if="${session.user != null}" style="text-align:center;">
-        <h2>Xin chào, <span th:text="${session.user.fullName}"></span>!</h2>
-        <p>Bạn đã đăng nhập thành công.</p>
-        <a href="/logout" class="btn-login" style="display:inline-block; width:auto; padding:10px 20px;">Đăng xuất</a>
-    </div>
-
     <!-- ✅ Nếu CHƯA đăng nhập -->
     <div th:if="${session.user == null}">
         <h2 class="form-title">Đăng nhập</h2>

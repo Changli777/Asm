@@ -45,7 +45,6 @@
         #cart-overlay.show {
             opacity: 1;
         }
-
         #cart-panel {
             position: fixed;
             top: 0;
@@ -65,7 +64,6 @@
         #cart-panel.show {
             right: 0;
         }
-
         .cart-close-btn {
             position: absolute;
             top: 10px;
@@ -131,19 +129,6 @@
         const overlay = document.getElementById("cart-overlay");
         const panel = document.getElementById("cart-panel");
 
-        // cập nhật số lượng giỏ hàng
-        updateCartCount();
-
-        function updateCartCount() {
-            fetch("/cart/count")
-                .then(res => res.text())
-                .then(count => {
-                    const badge = document.getElementById("cart-count");
-                    if (badge) badge.textContent = count;
-                })
-                .catch(() => console.error("[cart] Không thể lấy số lượng giỏ hàng"));
-        }
-
         // khi click icon giỏ hàng trong header
         document.body.addEventListener("click", function(e) {
             const icon = e.target.closest(".cart-icon-header");
@@ -191,10 +176,32 @@
             }, 300);
         }
     });
-</script>
+    function updateCartCount() {
+        fetch("/cart/count")
+            .then(res => res.text())
+            .then(count => {
+                document.querySelectorAll('.cart-count-badge').forEach(el => {
+                    // nếu server trả 0 và bạn muốn ẩn badge khi 0
+                    if (Number(count) <= 0) {
+                        el.classList.add('hidden');
+                        el.textContent = 0;
+                    } else {
+                        el.classList.remove('hidden');
+                        el.textContent = count;
+                    }
+                });
+            })
+            .catch(err => console.error('[cart] Không thể lấy count', err));
+    }
 
+    // gọi khi DOM sẵn sàng
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCartCount();
+    });
+</script>
 <footer>
     <div th:replace="~{fragments/fragments :: footer}"></div>
 </footer>
+
 </body>
 </html>

@@ -68,17 +68,11 @@ public class CartController {
     public String viewCart(Model model) {
         User currentUser = sessionService.get("currentUser");
         if (currentUser == null) {
-            model.addAttribute("cartItems", List.of());
-            model.addAttribute("total", BigDecimal.ZERO);
-            return "fragments/cart"; // file thymeleaf fragment
+            return "redirect:/login";
         }
 
         List<CartItem> cartItems = cartItemService.findAllByUser(currentUser);
-
-        BigDecimal total = cartItems.stream()
-                .map(item -> item.getProduct().getFinalPrice()
-                        .multiply(BigDecimal.valueOf(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal total = cartItemService.calculateTotal(currentUser);
 
         model.addAttribute("cartItems", cartItems);
         model.addAttribute("total", total);
@@ -86,15 +80,10 @@ public class CartController {
     }
 
     // ----------------------- XOÁ 1 SẢN PHẨM -----------------------
-    @DeleteMapping("/cart/remove/{id}")
-    @ResponseBody
-    public ResponseEntity<?> removeItem(@PathVariable("id") Long id) {
-        try {
-            cartItemService.deleteById(id);
-            return ResponseEntity.ok("removed");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("error");
-        }
+    @PostMapping("/cart/remove/{id}")
+    public String removeItem(@PathVariable("id") Long id) {
+        cartItemService.deleteById(id);
+        return "redirect:/home";
     }
 
     // ----------------------- XOÁ TẤT CẢ -----------------------
@@ -103,7 +92,7 @@ public class CartController {
         User currentUser = sessionService.get("currentUser");
         if (currentUser == null) return "redirect:/login";
         cartItemService.deleteAllByUser(currentUser);
-        return "redirect:/home"; // hoặc trang nào bạn muốn
+        return "redirect:/home";
     }
 
 
@@ -136,16 +125,9 @@ public class CartController {
         // Lấy lại danh sách giỏ hàng sau khi cập nhật
         List<CartItem> cartItems = cartItemService.findAllByUser(currentUser);
 
-        // Tính lại tổng tiền
-        BigDecimal total = cartItems.stream()
-                .map(ci -> ci.getProduct().getFinalPrice()
-                        .multiply(BigDecimal.valueOf(ci.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         model.addAttribute("cartItems", cartItems);
-        model.addAttribute("total", total);
 
-        // Trả về fragment để cập nhật giao diện ngay lập tức
         return "fragments/cart :: cartPanel";
     }
+
 }
