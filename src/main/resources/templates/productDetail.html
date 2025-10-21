@@ -221,14 +221,23 @@
         <h3>Sản phẩm cùng danh mục</h3>
         <div class="related-grid">
             <div class="related-card" th:each="p : ${relatedProducts}">
-                <img th:src="@{${p.imageUrl}}" th:alt="${p.productName}">
+                <a th:href="@{/product/{id}(id=${p.productId})}">
+                    <img th:if="${p.imageUrl != null}"
+                         th:src="@{${p.imageUrl}}"
+                         th:alt="${p.productName}"
+                         style="width: 100%; height: 100%; object-fit: cover;">
+                    <span th:if="${p.imageUrl == null}"
+                          th:text="${p.productName}">Product</span>
+                </a>
                 <div class="info">
-                    <div th:text="${p.productName}">Tên sản phẩm</div>
+                    <div class="product-name">
+                        <a th:href="@{/product/{id}(id=${p.productId})}" th:text="${p.productName}">Tên sản phẩm</a>
+                    </div>
                     <div style="font-weight: 700; color: #ff4757; margin-top: 6px;"
                          th:text="${#numbers.formatDecimal(p.finalPrice,0,'COMMA',0,'POINT')} + '₫'">Giá</div>
                 </div>
                 <div class="card-actions">
-                    <form th:action="@{/cart/add}" method="post" style="display: inline; flex: 1;">
+                    <form th:action="@{/cart/add}" method="post">
                         <input type="hidden" name="productId" th:value="${p.productId}">
                         <button type="submit" class="btn-add-cart">Thêm vào giỏ</button>
                     </form>
