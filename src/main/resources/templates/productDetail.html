@@ -187,6 +187,7 @@
 <div th:replace="~{fragments/fragments :: header}"></div>
 
 <div class="container">
+    <!-- CHI TIẾT SẢN PHẨM -->
     <div class="product-detail">
         <div class="product-image">
             <img th:src="@{${product.imageUrl}}" th:alt="${product.productName}">
@@ -208,7 +209,10 @@
                 <p>Ngày tạo: <span th:text="${#temporals.format(product.createdAt,'dd/MM/yyyy HH:mm')}">--</span></p>
                 <p>Ngày cập nhật: <span th:text="${#temporals.format(product.updatedAt,'dd/MM/yyyy HH:mm')}">--</span></p>
             </div>
-            <button class="btn-add-cart" th:data-productId="${product.productId}">🛒 Thêm vào giỏ hàng</button>
+            <form th:action="@{/cart/add}" method="post" style="display: inline; flex: 1;">
+                <input type="hidden" name="productId" th:value="${product.productId}">
+                <button type="submit" class="btn-add-cart">Thêm vào giỏ</button>
+            </form>
         </div>
     </div>
 
@@ -224,9 +228,10 @@
                          th:text="${#numbers.formatDecimal(p.finalPrice,0,'COMMA',0,'POINT')} + '₫'">Giá</div>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-card btn-add-cart-card btn-add-cart" th:data-productId="${p.productId}">
-                        Thêm giỏ hàng
-                    </button>
+                    <form th:action="@{/cart/add}" method="post" style="display: inline; flex: 1;">
+                        <input type="hidden" name="productId" th:value="${p.productId}">
+                        <button type="submit" class="btn-add-cart">Thêm vào giỏ</button>
+                    </form>
                     <a th:href="@{/product/{id}(id=${p.productId})}" class="btn-card btn-detail-card">
                         Chi tiết
                     </a>
@@ -236,8 +241,118 @@
     </div>
 </div>
 
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div th:if="${message}">
+    <script th:inline="javascript">
+        Swal.fire({
+            icon: 'success',
+            title: 'Thành công!',
+            text: [[${message}]],
+            showConfirmButton: false,
+            timer: 1800
+        });
+    </script>
+</div>
+
+<div th:if="${error}">
+    <script th:inline="javascript">
+        Swal.fire({
+            icon: 'error',
+            title: 'Thất bại!',
+            text: [[${error}]],
+            showConfirmButton: true
+        });
+    </script>
+</div>
+</div>
+
+<!-- Overlay & panel -->
+<div id="cart-overlay" class="hidden"></div>
+<div id="cart-panel" class="hidden"></div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        console.log("[cart] Ready");
+
+        const overlay = document.getElementById("cart-overlay");
+        const panel = document.getElementById("cart-panel");
+
+        // khi click icon giỏ hàng trong header
+        document.body.addEventListener("click", function(e) {
+            const icon = e.target.closest(".cart-icon-header");
+            if (!icon) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            console.log("[cart] Icon clicked, loading fragment...");
+
+            fetch("/cart")
+                .then(res => res.text())
+                .then(html => {
+                    panel.innerHTML = html;
+                    overlay.classList.remove("hidden");
+                    panel.classList.remove("hidden");
+                    requestAnimationFrame(() => {
+                        overlay.classList.add("show");
+                        panel.classList.add("show");
+                    });
+                })
+                .catch(err => console.error("[cart] Lỗi khi load fragment:", err));
+        });
+
+        // đóng khi click ra ngoài
+        overlay.addEventListener("click", closeCart);
+
+        // đóng khi bấm nút X
+        panel.addEventListener("click", e => {
+            if (e.target.classList.contains("cart-close-btn") || e.target.classList.contains("close-cart")) {
+                closeCart();
+            }
+        });
+
+        // ESC để đóng
+        document.addEventListener("keydown", e => {
+            if (e.key === "Escape") closeCart();
+        });
+
+        function closeCart() {
+            overlay.classList.remove("show");
+            panel.classList.remove("show");
+            setTimeout(() => {
+                overlay.classList.add("hidden");
+                panel.classList.add("hidden");
+            }, 300);
+        }
+    });
+    function updateCartCount() {
+        fetch("/cart/count")
+            .then(res => res.text())
+            .then(count => {
+                document.querySelectorAll('.cart-count-badge').forEach(el => {
+                    // nếu server trả 0 và bạn muốn ẩn badge khi 0
+                    if (Number(count) <= 0) {
+                        el.classList.add('hidden');
+                        el.textContent = 0;
+                    } else {
+                        el.classList.remove('hidden');
+                        el.textContent = count;
+                    }
+                });
+            })
+            .catch(err => console.error('[cart] Không thể lấy count', err));
+    }
+
+    // gọi khi DOM sẵn sàng
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCartCount();
+    });
+</script>
+
 <footer>
     <div th:replace="~{fragments/fragments :: footer}"></div>
 </footer>
+
 </body>
 </html>

@@ -112,12 +112,14 @@
 <body>
 <div class="login-container">
     <div class="logo-section">
-        <div class="logo">Shopii</div>
+        <div class="logo">
+            <a th:href="@{/home}">Shopii</a>
+        </div>
         <div class="logo-subtitle">Chào mừng trở lại!</div>
     </div>
 
     <!-- ✅ Nếu CHƯA đăng nhập -->
-    <div th:if="${session.user == null}">
+    <div th:if="${currentUser.user == null}">
         <h2 class="form-title">Đăng nhập</h2>
         <p class="form-subtitle">Đăng nhập để tiếp tục mua sắm</p>
 

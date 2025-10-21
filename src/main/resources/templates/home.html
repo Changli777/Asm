@@ -176,14 +176,16 @@
             }, 300);
         }
     });
+    // gọi khi trang load
     function updateCartCount() {
         fetch("/cart/count")
             .then(res => res.text())
             .then(count => {
+                // cập nhật tất cả các phần tử .cart-count-badge trên trang
                 document.querySelectorAll('.cart-count-badge').forEach(el => {
                     // nếu server trả 0 và bạn muốn ẩn badge khi 0
                     if (Number(count) <= 0) {
-                        el.classList.add('hidden');
+                        el.classList.add('hidden');  // bạn đã có css .hidden
                         el.textContent = 0;
                     } else {
                         el.classList.remove('hidden');
@@ -198,7 +200,10 @@
     document.addEventListener('DOMContentLoaded', function() {
         updateCartCount();
     });
+
 </script>
+
+
 <footer>
     <div th:replace="~{fragments/fragments :: footer}"></div>
 </footer>

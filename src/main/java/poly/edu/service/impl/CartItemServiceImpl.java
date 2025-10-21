@@ -90,8 +90,12 @@ public class CartItemServiceImpl implements CartItemService {
     public BigDecimal calculateTotal(User user) {
         List<CartItem> items = cartItemDAO.findByUser(user);
         return items.stream()
-                .map(item -> item.getProduct().getPrice()
-                        .multiply(BigDecimal.valueOf(item.getQuantity())))
+                .map(item -> {
+                    BigDecimal price = item.getProduct().getDiscountPrice() != null
+                            ? item.getProduct().getDiscountPrice()
+                            : item.getProduct().getPrice();
+                    return price.multiply(BigDecimal.valueOf(item.getQuantity()));
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
