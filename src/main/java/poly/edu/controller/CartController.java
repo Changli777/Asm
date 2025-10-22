@@ -8,15 +8,15 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.thymeleaf.spring6.SpringTemplateEngine;
-import poly.edu.entity.CartItem;
-import poly.edu.entity.User;
+import poly.edu.dao.OrderDao;
+import poly.edu.dao.OrderDetailDao;
+import poly.edu.dao.UserDAO;
+import poly.edu.entity.*;
 import poly.edu.service.CartItemService;
 import poly.edu.service.SessionService;
+
 import java.math.BigDecimal;
-import java.security.Principal;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -30,6 +30,15 @@ public class CartController {
 
     @Autowired
     private SpringTemplateEngine templateEngine;
+
+    @Autowired
+    private OrderDao orderRepo;
+
+    @Autowired
+    private OrderDetailDao detailRepo;
+
+    @Autowired
+    private UserDAO userRepo;
 
     // ----------------------- THÊM VÀO GIỎ -----------------------
     @PostMapping("/cart/add")
@@ -70,7 +79,7 @@ public class CartController {
         if (currentUser == null) {
             model.addAttribute("cartItems", List.of());
             model.addAttribute("total", BigDecimal.ZERO);
-            return "fragments/cart"; // file thymeleaf fragment
+            return "fragments/cart";
         }
 
         List<CartItem> cartItems = cartItemService.findAllByUser(currentUser);
@@ -103,23 +112,20 @@ public class CartController {
         User currentUser = sessionService.get("currentUser");
         if (currentUser == null) return "redirect:/login";
         cartItemService.deleteAllByUser(currentUser);
-        return "redirect:/home"; // hoặc trang nào bạn muốn
+        return "redirect:/home";
     }
-
 
     // ----------------------- CẬP NHẬT SỐ LƯỢNG -----------------------
     @PutMapping("/cart/update/{id}")
     public String updateCartItem(@PathVariable("id") Long cartItemId,
                                  @RequestParam("quantity") int quantity,
                                  Model model) {
-        // Lấy user đang đăng nhập từ session
         User currentUser = sessionService.get("currentUser");
 
         if (currentUser == null) {
             return "redirect:/login";
         }
 
-        // Tìm sản phẩm trong giỏ của user
         Optional<CartItem> optionalItem = cartItemService.findById(cartItemId);
 
         if (optionalItem.isPresent()) {
@@ -133,10 +139,8 @@ public class CartController {
             }
         }
 
-        // Lấy lại danh sách giỏ hàng sau khi cập nhật
         List<CartItem> cartItems = cartItemService.findAllByUser(currentUser);
 
-        // Tính lại tổng tiền
         BigDecimal total = cartItems.stream()
                 .map(ci -> ci.getProduct().getFinalPrice()
                         .multiply(BigDecimal.valueOf(ci.getQuantity())))
@@ -145,7 +149,94 @@ public class CartController {
         model.addAttribute("cartItems", cartItems);
         model.addAttribute("total", total);
 
-        // Trả về fragment để cập nhật giao diện ngay lập tức
         return "fragments/cart :: cartPanel";
+    }
+
+    // ----------------------- HIỂN THỊ TRANG THANH TOÁN -----------------------
+    @GetMapping("/checkout")
+    public String showCheckout(Model model, RedirectAttributes redirectAttributes) {
+        User currentUser = sessionService.get("currentUser");
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "Bạn phải đăng nhập để thanh toán.");
+            return "redirect:/login";
+        }
+
+        List<CartItem> cartItems = cartItemService.findAllByUser(currentUser);
+        if (cartItems.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Giỏ hàng của bạn đang trống.");
+            return "redirect:/home";
+        }
+
+        BigDecimal total = cartItems.stream()
+                .map(item -> item.getProduct().getFinalPrice()
+                        .multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        model.addAttribute("user", currentUser);
+        model.addAttribute("cartItems", cartItems);
+        model.addAttribute("total", total);
+
+        return "fragments/checkout"; // file checkout.html bạn tạo
+    }
+
+    // ----------------------- XÁC NHẬN THANH TOÁN -----------------------
+    @PostMapping("/checkout/confirm")
+    public String confirmCheckout(@RequestParam String fullName,
+                                  @RequestParam String phone,
+                                  @RequestParam String address,
+                                  @RequestParam String paymentMethod,
+                                  RedirectAttributes redirectAttributes) {
+
+        User currentUser = sessionService.get("currentUser");
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "Bạn phải đăng nhập để thanh toán.");
+            return "redirect:/login";
+        }
+
+        // Cập nhật thông tin người dùng
+        currentUser.setFullName(fullName);
+        currentUser.setPhone(phone);
+        currentUser.setAddress(address);
+        userRepo.save(currentUser);
+
+        List<CartItem> cartItems = cartItemService.findAllByUser(currentUser);
+        if (cartItems.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Giỏ hàng của bạn đang trống.");
+            return "redirect:/home";
+        }
+
+        // Tính tổng tiền
+        BigDecimal total = cartItems.stream()
+                .map(item -> item.getProduct().getFinalPrice()
+                        .multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Tạo order mới
+        Order order = new Order();
+        order.setUser(currentUser);
+        order.setTotal(total);
+        order.setStatus("Pending");
+        order.setOrderDate(new java.util.Date());
+        orderRepo.save(order);
+
+        // Lưu chi tiết đơn hàng
+        for (CartItem item : cartItems) {
+            OrderDetail detail = new OrderDetail();
+            detail.setOrder(order);
+            detail.setProduct(item.getProduct());
+            detail.setProductName(item.getProduct().getProductName());
+            detail.setQuantity(item.getQuantity());
+            detail.setPrice(item.getProduct().getFinalPrice());
+            BigDecimal subtotal = item.getProduct().getFinalPrice()
+                    .multiply(BigDecimal.valueOf(item.getQuantity()));
+            detail.setSubtotal(subtotal);
+            detailRepo.save(detail);
+        }
+
+        // Xóa giỏ hàng sau khi đặt
+        cartItemService.deleteAllByUser(currentUser);
+
+        redirectAttributes.addFlashAttribute("message", "Đặt hàng thành công!");
+        return "fragments/thankyou";
     }
 }

@@ -36,10 +36,10 @@
             </form>
 
             <span>Tổng cộng:
-                <span th:text="${totalPrice} + ' VND'">0 VND</span>
+              <span th:text="${total} + ' VND'">0 VND</span>
             </span>
 
-            <form th:action="@{/checkout}" method="post" style="display:inline;">
+            <form th:action="@{/checkout}" method="get" style="display:inline;">
                 <button id="checkout" type="submit">Thanh toán</button>
             </form>
         </div>
