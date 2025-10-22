@@ -13,14 +13,15 @@ import java.math.BigDecimal;
 public class OrderDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "order_detail_id", nullable = false)
     private Long id;
-
-    @Column(name = "product_name", nullable = false)
-    private String productName;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
+
+    @Column(name = "product_name", nullable = false)
+    private String productName;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "product_id", nullable = false)
@@ -35,4 +36,9 @@ public class OrderDetail {
     @Column(nullable = false, precision = 18, scale = 2)
     private BigDecimal subtotal;
 
+    @Transient
+    private String formattedPrice;
+
+    @Transient
+    private String formattedSubtotal;
 }

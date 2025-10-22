@@ -2,14 +2,13 @@ package poly.edu.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.thymeleaf.spring6.SpringTemplateEngine;
-import poly.edu.dao.OrderDao;
-import poly.edu.dao.OrderDetailDao;
+import poly.edu.dao.OrderDAO;
+import poly.edu.dao.OrderDetailDAO;
 import poly.edu.dao.UserDAO;
 import poly.edu.entity.*;
 import poly.edu.service.CartItemService;
@@ -34,10 +33,10 @@ public class CartController {
     private SpringTemplateEngine templateEngine;
 
     @Autowired
-    private OrderDao orderRepo;
+    private OrderDAO orderDao;
 
     @Autowired
-    private OrderDetailDao detailRepo;
+    private OrderDetailDAO detailDao;
 
     @Autowired
     private UserDAO userRepo;
@@ -162,7 +161,7 @@ public class CartController {
         return response;
     }
 
-    // ----------------------- HIỂN THỊ TRANG THANH TOÁN -----------------------
+    // ----------------------- HIỂN THỊ TRANG ĐẶT HÀNG -----------------------
     @GetMapping("/checkout")
     public String showCheckout(Model model, RedirectAttributes redirectAttributes) {
         User currentUser = sessionService.get("currentUser");
@@ -186,10 +185,10 @@ public class CartController {
         model.addAttribute("cartItems", cartItems);
         model.addAttribute("total", total);
 
-        return "fragments/checkout"; // file checkout.html bạn tạo
+        return "fragments/checkout";
     }
 
-    // ----------------------- XÁC NHẬN THANH TOÁN -----------------------
+    // ----------------------- XÁC NHẬN ĐẶT HÀNG -----------------------
     @PostMapping("/checkout/confirm")
     public String confirmCheckout(@RequestParam String fullName,
                                   @RequestParam String phone,
@@ -199,8 +198,16 @@ public class CartController {
 
         User currentUser = sessionService.get("currentUser");
         if (currentUser == null) {
-            redirectAttributes.addFlashAttribute("error", "Bạn phải đăng nhập để thanh toán.");
+            redirectAttributes.addFlashAttribute(   "error", "Bạn phải đăng nhập để thanh toán.");
             return "redirect:/login";
+        }
+
+        // Validate input
+        if (fullName == null || fullName.trim().isEmpty() ||
+                phone == null || phone.trim().isEmpty() ||
+                address == null || address.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng điền đầy đủ thông tin giao hàng.");
+            return "redirect:/checkout";
         }
 
         // Cập nhật thông tin người dùng
@@ -215,21 +222,32 @@ public class CartController {
             return "redirect:/home";
         }
 
-        // Tính tổng tiền
-        BigDecimal total = cartItems.stream()
-                .map(item -> item.getProduct().getFinalPrice()
-                        .multiply(BigDecimal.valueOf(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        // Tạo order mới
+        // ✅ TẠO ORDER MỚI - BỔ SUNG ĐẦY ĐỦ THÔNG TIN
         Order order = new Order();
         order.setUser(currentUser);
-        order.setTotal(total);
         order.setStatus("Pending");
         order.setOrderDate(new java.util.Date());
-        orderRepo.save(order);
+        order.setCreatedAt(new java.util.Date());
 
-        // Lưu chi tiết đơn hàng
+        // ✅ THÔNG TIN SHIPPING (BẮT BUỘC)
+        order.setShippingFullName(fullName);
+        order.setShippingPhone(phone);
+        order.setShippingAddress(address);
+
+        // ✅ THÔNG TIN PAYMENT
+        order.setPaymentMethod(paymentMethod);
+        order.setPaymentStatus("Pending");
+
+        // ✅ TẠO ORDER NUMBER TỰ ĐỘNG
+        order.setOrderNumber("ORD-" + System.currentTimeMillis());
+
+        // ✅ DISCOUNT AMOUNT (mặc định = 0)
+        order.setDiscountAmount(BigDecimal.ZERO);
+
+        // ✅ LƯU ORDER TRƯỚC (để có orderId)
+        orderDao.save(order);
+
+        // ✅ LƯU CHI TIẾT ĐƠN HÀNG
         for (CartItem item : cartItems) {
             OrderDetail detail = new OrderDetail();
             detail.setOrder(order);
@@ -237,17 +255,20 @@ public class CartController {
             detail.setProductName(item.getProduct().getProductName());
             detail.setQuantity(item.getQuantity());
             detail.setPrice(item.getProduct().getFinalPrice());
+
+            // Tính subtotal
             BigDecimal subtotal = item.getProduct().getFinalPrice()
                     .multiply(BigDecimal.valueOf(item.getQuantity()));
             detail.setSubtotal(subtotal);
-            detailRepo.save(detail);
+
+            detailDao.save(detail);
         }
 
         // Xóa giỏ hàng sau khi đặt
         cartItemService.deleteAllByUser(currentUser);
 
-        redirectAttributes.addFlashAttribute("message", "Đặt hàng thành công!");
-        return "fragments/thankyou";
+        redirectAttributes.addFlashAttribute("message", "Đặt hàng thành công! Mã đơn hàng: " + order.getOrderNumber());
+        return "redirect:/home";
     }
 }
 
