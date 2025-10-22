@@ -1,9 +1,7 @@
 package poly.edu.dao;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import poly.edu.entity.CartItem;
 import poly.edu.entity.Product;
@@ -24,7 +22,5 @@ public interface CartItemDAO extends JpaRepository<CartItem, Long> {
 
     long countByUser(User user);
 
-    @Modifying
-    @Query("DELETE FROM CartItem c WHERE c.user = :user")
-    void deleteAllByUser(@Param("user") User user);
+    void deleteAllByUser(User user);
 }
