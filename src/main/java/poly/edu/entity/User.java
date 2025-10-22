@@ -46,7 +46,7 @@ public class User {
 
     @NotNull(message = "Chưa nhập ngày sinh")
     @Past(message = "Ngày sinh không hợp lệ")
-    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    @DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
     @Column(name = "date_of_birth")
     private java.time.LocalDate dateOfBirth;
 
