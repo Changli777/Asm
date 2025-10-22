@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Thanh toán</title>
+    <style>
+        .checkout-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .checkout-section {
+            margin-bottom: 25px;
+        }
+        .checkout-section h3 {
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        input[type="text"], input[type="tel"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin: 6px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        .total {
+            text-align: right;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .btn-confirm {
+            background: #ff6600;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-confirm:hover {
+            background: #e65c00;
+        }
+    </style>
+</head>
+<body>
+<section>
+    <div class="checkout-container">
+        <h2>Thanh toán</h2>
+
+        <!-- THÔNG TIN KHÁCH HÀNG -->
+        <div class="checkout-section">
+            <h3>Thông tin người nhận</h3>
+            <form th:action="@{/checkout/confirm}" method="post">
+                <input type="hidden" name="userId" th:value="${user.userId}">
+                <label>Họ và tên:</label>
+                <input type="text" name="fullName" th:value="${user.fullName}" required>
+
+                <label>Số điện thoại:</label>
+                <input type="tel" name="phone" th:value="${user.phone}" required>
+
+                <label>Địa chỉ giao hàng:</label>
+                <textarea name="address" required th:text="${user.address}"></textarea>
+
+                <!-- PHƯƠNG THỨC THANH TOÁN -->
+                <div class="checkout-section">
+                    <h3>Phương thức thanh toán</h3>
+                    <label>
+                        <input type="radio" name="paymentMethod" value="COD" checked> Thanh toán khi nhận hàng
+                    </label><br>
+                    <label>
+                        <input type="radio" name="paymentMethod" value="CARD"> Thẻ ngân hàng / Ví điện tử
+                    </label>
+                </div>
+
+                <!-- DANH SÁCH SẢN PHẨM -->
+                <div class="checkout-section">
+                    <h3>Đơn hàng của bạn</h3>
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Hình</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Giá</th>
+                            <th>Số lượng</th>
+                            <th>Tổng</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="item : ${cartItems}">
+                            <td><img th:src="@{'/photos/' + ${item.product.imageUrl}}" width="60"></td>
+                            <td th:text="${item.product.productName}"></td>
+                            <td th:text="${item.product.finalPrice} + ' VND'"></td>
+                            <td th:text="${item.quantity}"></td>
+                            <td th:text="${item.product.finalPrice * item.quantity} + ' VND'"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div class="total">Tổng cộng: <span th:text="${total} + ' VND'"></span></div>
+                </div>
+
+                <button type="submit" class="btn-confirm">Xác nhận đặt hàng</button>
+            </form>
+        </div>
+    </div>
+</section>
+</body>
+</html>
