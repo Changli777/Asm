@@ -108,7 +108,7 @@ public class CartController {
         String referer = request.getHeader("Referer");
         User currentUser = sessionService.get("currentUser");
         if (currentUser == null) return "redirect:/login";
-        cartItemService.deleteAllByUser(currentUser);d
+        cartItemService.deleteAllByUser(currentUser);
         // Lấy URL trang trước
         return "redirect:" + (referer != null ? referer : "/home");
     }

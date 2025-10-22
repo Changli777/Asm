@@ -3,62 +3,180 @@
 <head>
     <title>Thanh toán</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+        }
+
         .checkout-container {
-            max-width: 900px;
-            margin: 0 auto;
+            max-width: 1000px;
+            margin: 30px auto;
             padding: 20px;
             background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
+
+        h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #555;
+        }
+
         .checkout-section {
             margin-bottom: 25px;
         }
-        .checkout-section h3 {
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
         }
-        input[type="text"], input[type="tel"], textarea, select {
+
+        input[type="text"],
+        input[type="tel"],
+        textarea {
             width: 100%;
             padding: 10px;
-            margin: 6px 0;
+            margin-bottom: 15px;
             border: 1px solid #ccc;
             border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
         }
+
+        input[type="text"]:focus,
+        input[type="tel"]:focus,
+        textarea:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        input[type="radio"] {
+            margin-right: 8px;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-        }
-        table, th, td {
-            border: 1px solid #ddd;
-        }
-        th, td {
-            padding: 10px;
-            text-align: center;
-        }
-        .total {
-            text-align: right;
-            font-size: 1.2rem;
-            font-weight: bold;
             margin-top: 10px;
         }
-        .btn-confirm {
-            background: #ff6600;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
+
+        table th, table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+            font-size: 14px;
+            color: #333;
         }
+
+        table th {
+            background-color: #f0f0f0;
+        }
+
+        table img {
+            border-radius: 6px;
+        }
+
+        .total {
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: right;
+            color: #222;
+        }
+
+        .btn-confirm {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: #007bff;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 500;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
         .btn-confirm:hover {
-            background: #e65c00;
+            background-color: #0056b3;
+        }
+
+        footer {
+            margin-top: auto;
+        }
+
+        /* ========== CART OVERLAY + PANEL ========== */
+        #cart-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1200;
+        }
+        #cart-overlay.hidden {
+            display: none;
+        }
+        #cart-overlay.show {
+            opacity: 1;
+        }
+        #cart-panel {
+            position: fixed;
+            top: 0;
+            right: -420px;
+            width: 400px;
+            height: 100%;
+            background: #fff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.25);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            z-index: 1250;
+            padding: 20px;
+        }
+        #cart-panel.hidden {
+            display: none;
+        }
+        #cart-panel.show {
+            right: 0;
+        }
+        .cart-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
         }
     </style>
+
 </head>
 <body>
+<!-- Header -->
+<div th:replace="~{fragments/fragments :: header}"></div>
 <section>
     <div class="checkout-container">
         <h2>Thanh toán</h2>
@@ -103,7 +221,8 @@
                         </thead>
                         <tbody>
                         <tr th:each="item : ${cartItems}">
-                            <td><img th:src="@{'/photos/' + ${item.product.imageUrl}}" width="60"></td>
+                            <td><img th:src="${item.product.imageUrl} == null ? '/images/no-image.png' : @{{file}(file=${item.product.imageUrl})}"
+                                     alt="image" class="cart-item-image" width="50"/></td>
                             <td th:text="${item.product.productName}"></td>
                             <td th:text="${item.product.finalPrice} + ' VND'"></td>
                             <td th:text="${item.quantity}"></td>
@@ -119,5 +238,183 @@
         </div>
     </div>
 </section>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div th:if="${message}">
+    <script th:inline="javascript">
+        Swal.fire({
+            icon: 'success',
+            title: 'Thành công!',
+            text: [[${message}]],
+            showConfirmButton: false,
+            timer: 1800
+        });
+    </script>
+</div>
+
+<div th:if="${error}">
+    <script th:inline="javascript">
+        Swal.fire({
+            icon: 'error',
+            title: 'Thất bại!',
+            text: [[${error}]],
+            showConfirmButton: true
+        });
+    </script>
+</div>
+</div>
+
+<!-- Overlay & panel -->
+<div id="cart-overlay" class="hidden"></div>
+<div id="cart-panel" class="hidden"></div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        console.log("[cart] Ready");
+
+        const overlay = document.getElementById("cart-overlay");
+        const panel = document.getElementById("cart-panel");
+
+        // khi click icon giỏ hàng trong header
+        document.body.addEventListener("click", function(e) {
+            const icon = e.target.closest(".cart-icon-header");
+            if (!icon) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            console.log("[cart] Icon clicked, loading fragment...");
+
+            fetch("/cart")
+                .then(res => res.text())
+                .then(html => {
+                    panel.innerHTML = html;
+                    overlay.classList.remove("hidden");
+                    panel.classList.remove("hidden");
+                    requestAnimationFrame(() => {
+                        overlay.classList.add("show");
+                        panel.classList.add("show");
+                    });
+                })
+                .catch(err => console.error("[cart] Lỗi khi load fragment:", err));
+        });
+
+        // đóng khi click ra ngoài
+        overlay.addEventListener("click", closeCart);
+
+        // đóng khi bấm nút X
+        panel.addEventListener("click", e => {
+            if (e.target.classList.contains("cart-close-btn") || e.target.classList.contains("close-cart")) {
+                closeCart();
+            }
+        });
+
+        // ESC để đóng
+        document.addEventListener("keydown", e => {
+            if (e.key === "Escape") closeCart();
+        });
+
+        function closeCart() {
+            overlay.classList.remove("show");
+            panel.classList.remove("show");
+            setTimeout(() => {
+                overlay.classList.add("hidden");
+                panel.classList.add("hidden");
+            }, 300);
+        }
+    });
+    // gọi khi trang load
+    function updateCartCount() {
+        fetch("/cart/count")
+            .then(res => res.text())
+            .then(count => {
+                // cập nhật tất cả các phần tử .cart-count-badge trên trang
+                document.querySelectorAll('.cart-count-badge').forEach(el => {
+                    // nếu server trả 0 và bạn muốn ẩn badge khi 0
+                    if (Number(count) <= 0) {
+                        el.classList.add('hidden');  // bạn đã có css .hidden
+                        el.textContent = 0;
+                    } else {
+                        el.classList.remove('hidden');
+                        el.textContent = count;
+                    }
+                });
+            })
+            .catch(err => console.error('[cart] Không thể lấy count', err));
+    }
+
+    // gọi khi DOM sẵn sàng
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCartCount();
+    });
+    document.addEventListener("DOMContentLoaded", function() {
+
+        function setupRowPagination(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            function attachPagination() {
+                container.querySelectorAll(".grid-pagination button").forEach(btn => {
+                    btn.onclick = function(e) {
+                        e.preventDefault();
+                        const url = this.getAttribute("data-url");
+                        if (!url) return;
+
+                        // slide out current
+                        container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                        container.style.transform = 'translateX(-100%)';
+                        container.style.opacity = 0;
+
+                        fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+                            .then(res => res.text())
+                            .then(html => {
+                                const tempDiv = document.createElement('div');
+                                tempDiv.innerHTML = html;
+
+                                // tìm đúng fragment mới trong response
+                                const newSection = tempDiv.querySelector('#' + containerId);
+                                if (newSection) {
+                                    setTimeout(() => {
+                                        container.innerHTML = newSection.innerHTML;
+
+                                        // slide in
+                                        container.style.transform = 'translateX(100%)';
+                                        container.style.opacity = 0;
+                                        requestAnimationFrame(() => {
+                                            container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                                            container.style.transform = 'translateX(0)';
+                                            container.style.opacity = 1;
+                                        });
+
+                                        // attach listener cho button mới
+                                        attachPagination();
+
+                                        // update URL để giữ lịch sử
+                                        history.pushState(null, '', url);
+                                    }, 300);
+                                }
+                            })
+                            .catch(err => console.error('AJAX pagination error:', err));
+                    };
+                });
+            }
+
+            attachPagination();
+        }
+
+        // gọi cho cả 3 row
+        setupRowPagination('product-grid-new');
+        setupRowPagination('product-grid-sale');
+        setupRowPagination('product-grid-hot');
+
+    });
+</script>
+
+
+<footer>
+    <div th:replace="~{fragments/fragments :: footer}"></div>
+</footer>
+
 </body>
 </html>
