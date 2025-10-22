@@ -16,7 +16,9 @@ import poly.edu.service.CartItemService;
 import poly.edu.service.SessionService;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -81,7 +83,6 @@ public class CartController {
             model.addAttribute("cartItems", List.of());
             model.addAttribute("total", BigDecimal.ZERO);
             return "fragments/cart";
-            return "redirect:/login";
         }
 
         List<CartItem> cartItems = cartItemService.findAllByUser(currentUser);
@@ -94,32 +95,26 @@ public class CartController {
 
     // ----------------------- XOÁ 1 SẢN PHẨM -----------------------
     @PostMapping("/cart/remove/{id}")
-    public String removeItem(@PathVariable("id") Long id) {
+    public String removeItem(@PathVariable("id") Long id, HttpServletRequest request) {
+        String referer = request.getHeader("Referer");
         cartItemService.deleteById(id);
         // Lấy URL trang trước (trang user vừa ở)
-        String referer = request.getHeader("Referer");
         return "redirect:" + (referer != null ? referer : "/home");
     }
 
     // ----------------------- XOÁ TẤT CẢ -----------------------
     @PostMapping("/cart/clear")
-    public String clearCart() {
+    public String clearCart(HttpServletRequest request) {
+        String referer = request.getHeader("Referer");
         User currentUser = sessionService.get("currentUser");
         if (currentUser == null) return "redirect:/login";
-        cartItemService.deleteAllByUser(currentUser);
-        return "redirect:/home";
+        cartItemService.deleteAllByUser(currentUser);d
         // Lấy URL trang trước
-        String referer = request.getHeader("Referer");
         return "redirect:" + (referer != null ? referer : "/home");
     }
 
     // ----------------------- CẬP NHẬT SỐ LƯỢNG -----------------------
     @PutMapping("/cart/update/{id}")
-    public String updateCartItem(@PathVariable("id") Long cartItemId,
-                                 @RequestParam("quantity") int quantity,
-                                 Model model) {
-        User currentUser = sessionService.get("currentUser");
-    @PostMapping("/cart/update/{id}")
     @ResponseBody
     public Map<String, Object> updateCartItem(@PathVariable("id") Long cartItemId,
                                               @RequestParam("quantity") int quantity) {
@@ -165,11 +160,6 @@ public class CartController {
                         .multiply(BigDecimal.valueOf(ci.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         return response;
-    }
-
-
-
-        return "fragments/cart :: cartPanel";
     }
 
     // ----------------------- HIỂN THỊ TRANG THANH TOÁN -----------------------
@@ -260,4 +250,4 @@ public class CartController {
         return "fragments/thankyou";
     }
 }
-}
+
