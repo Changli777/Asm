@@ -50,12 +50,17 @@
                 </button>
             </form>
 
+            <span>Tổng cộng:
+              <span th:text="${total} + ' VND'">0 VND</span>
+            </span>
+
+            <form th:action="@{/checkout}" method="get" style="display:inline;">
             <span class="total-label">Tổng cộng:
                 <span class="total-value"
                     th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')} + ' VND'">0 VND</span>
                 </span>
             <form th:action="@{/checkout}" method="post" style="display:inline;">
-                <button id="checkout" type="submit">Thanh toán</button>
+                <button id="checkout" type="submit">Đặt hàng</button>
             </form>
         </div>
     </section>

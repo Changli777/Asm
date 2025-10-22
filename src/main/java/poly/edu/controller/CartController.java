@@ -2,18 +2,19 @@ package poly.edu.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.thymeleaf.spring6.SpringTemplateEngine;
-import poly.edu.entity.CartItem;
-import poly.edu.entity.User;
+import poly.edu.dao.OrderDAO;
+import poly.edu.dao.OrderDetailDAO;
+import poly.edu.dao.UserDAO;
+import poly.edu.entity.*;
 import poly.edu.service.CartItemService;
 import poly.edu.service.SessionService;
+
 import java.math.BigDecimal;
-import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,13 @@ public class CartController {
     private SpringTemplateEngine templateEngine;
 
     @Autowired
+    private OrderDAO orderDao;
+
+    @Autowired
+    private OrderDetailDAO detailDao;
+
+    @Autowired
+    private UserDAO userRepo;
     private HttpServletRequest request;
 
     // ----------------------- THÊM VÀO GIỎ -----------------------
@@ -71,7 +79,9 @@ public class CartController {
     public String viewCart(Model model) {
         User currentUser = sessionService.get("currentUser");
         if (currentUser == null) {
-            return "redirect:/login";
+            model.addAttribute("cartItems", List.of());
+            model.addAttribute("total", BigDecimal.ZERO);
+            return "fragments/cart";
         }
 
         List<CartItem> cartItems = cartItemService.findAllByUser(currentUser);
@@ -84,27 +94,26 @@ public class CartController {
 
     // ----------------------- XOÁ 1 SẢN PHẨM -----------------------
     @PostMapping("/cart/remove/{id}")
-    public String removeItem(@PathVariable("id") Long id) {
+    public String removeItem(@PathVariable("id") Long id, HttpServletRequest request) {
+        String referer = request.getHeader("Referer");
         cartItemService.deleteById(id);
         // Lấy URL trang trước (trang user vừa ở)
-        String referer = request.getHeader("Referer");
         return "redirect:" + (referer != null ? referer : "/home");
     }
 
     // ----------------------- XOÁ TẤT CẢ -----------------------
     @PostMapping("/cart/clear")
-    public String clearCart() {
+    public String clearCart(HttpServletRequest request) {
+        String referer = request.getHeader("Referer");
         User currentUser = sessionService.get("currentUser");
         if (currentUser == null) return "redirect:/login";
         cartItemService.deleteAllByUser(currentUser);
         // Lấy URL trang trước
-        String referer = request.getHeader("Referer");
         return "redirect:" + (referer != null ? referer : "/home");
     }
 
-
     // ----------------------- CẬP NHẬT SỐ LƯỢNG -----------------------
-    @PostMapping("/cart/update/{id}")
+    @PutMapping("/cart/update/{id}")
     @ResponseBody
     public Map<String, Object> updateCartItem(@PathVariable("id") Long cartItemId,
                                               @RequestParam("quantity") int quantity) {
@@ -143,9 +152,123 @@ public class CartController {
         response.put("totalCart", totalCart);
         response.put("success", true);
 
+        List<CartItem> cartItems = cartItemService.findAllByUser(currentUser);
+
+        BigDecimal total = cartItems.stream()
+                .map(ci -> ci.getProduct().getFinalPrice()
+                        .multiply(BigDecimal.valueOf(ci.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         return response;
     }
 
+    // ----------------------- HIỂN THỊ TRANG ĐẶT HÀNG -----------------------
+    @GetMapping("/checkout")
+    public String showCheckout(Model model, RedirectAttributes redirectAttributes) {
+        User currentUser = sessionService.get("currentUser");
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "Bạn phải đăng nhập để thanh toán.");
+            return "redirect:/login";
+        }
 
+        List<CartItem> cartItems = cartItemService.findAllByUser(currentUser);
+        if (cartItems.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Giỏ hàng của bạn đang trống.");
+            return "redirect:/home";
+        }
 
+        BigDecimal total = cartItems.stream()
+                .map(item -> item.getProduct().getFinalPrice()
+                        .multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        model.addAttribute("user", currentUser);
+        model.addAttribute("cartItems", cartItems);
+        model.addAttribute("total", total);
+
+        return "fragments/checkout";
+    }
+
+    // ----------------------- XÁC NHẬN ĐẶT HÀNG -----------------------
+    @PostMapping("/checkout/confirm")
+    public String confirmCheckout(@RequestParam String fullName,
+                                  @RequestParam String phone,
+                                  @RequestParam String address,
+                                  @RequestParam String paymentMethod,
+                                  RedirectAttributes redirectAttributes) {
+
+        User currentUser = sessionService.get("currentUser");
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute(   "error", "Bạn phải đăng nhập để thanh toán.");
+            return "redirect:/login";
+        }
+
+        // Validate input
+        if (fullName == null || fullName.trim().isEmpty() ||
+                phone == null || phone.trim().isEmpty() ||
+                address == null || address.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng điền đầy đủ thông tin giao hàng.");
+            return "redirect:/checkout";
+        }
+
+        // Cập nhật thông tin người dùng
+        currentUser.setFullName(fullName);
+        currentUser.setPhone(phone);
+        currentUser.setAddress(address);
+        userRepo.save(currentUser);
+
+        List<CartItem> cartItems = cartItemService.findAllByUser(currentUser);
+        if (cartItems.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Giỏ hàng của bạn đang trống.");
+            return "redirect:/home";
+        }
+
+        // ✅ TẠO ORDER MỚI - BỔ SUNG ĐẦY ĐỦ THÔNG TIN
+        Order order = new Order();
+        order.setUser(currentUser);
+        order.setStatus("Pending");
+        order.setOrderDate(new java.util.Date());
+        order.setCreatedAt(new java.util.Date());
+
+        // ✅ THÔNG TIN SHIPPING (BẮT BUỘC)
+        order.setShippingFullName(fullName);
+        order.setShippingPhone(phone);
+        order.setShippingAddress(address);
+
+        // ✅ THÔNG TIN PAYMENT
+        order.setPaymentMethod(paymentMethod);
+        order.setPaymentStatus("Pending");
+
+        // ✅ TẠO ORDER NUMBER TỰ ĐỘNG
+        order.setOrderNumber("ORD-" + System.currentTimeMillis());
+
+        // ✅ DISCOUNT AMOUNT (mặc định = 0)
+        order.setDiscountAmount(BigDecimal.ZERO);
+
+        // ✅ LƯU ORDER TRƯỚC (để có orderId)
+        orderDao.save(order);
+
+        // ✅ LƯU CHI TIẾT ĐƠN HÀNG
+        for (CartItem item : cartItems) {
+            OrderDetail detail = new OrderDetail();
+            detail.setOrder(order);
+            detail.setProduct(item.getProduct());
+            detail.setProductName(item.getProduct().getProductName());
+            detail.setQuantity(item.getQuantity());
+            detail.setPrice(item.getProduct().getFinalPrice());
+
+            // Tính subtotal
+            BigDecimal subtotal = item.getProduct().getFinalPrice()
+                    .multiply(BigDecimal.valueOf(item.getQuantity()));
+            detail.setSubtotal(subtotal);
+
+            detailDao.save(detail);
+        }
+
+        // Xóa giỏ hàng sau khi đặt
+        cartItemService.deleteAllByUser(currentUser);
+
+        redirectAttributes.addFlashAttribute("message", "Đặt hàng thành công! Mã đơn hàng: " + order.getOrderNumber());
+        return "redirect:/home";
+    }
 }
+
