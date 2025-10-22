@@ -21,6 +21,8 @@ import poly.edu.entity.User;
 import poly.edu.service.CookieService;
 import poly.edu.service.ParamService;
 import poly.edu.service.SessionService;
+// IMPORT THÊM CHO VIỆC MÃ HÓA BCrypt
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -39,6 +41,10 @@ public class LogInController {
     private SessionService sessionService;
     @Autowired
     private UserDAO userDAO;
+
+    // THÊM AUTOWIRED CHO BCryptPasswordEncoder
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     @GetMapping("/login")
     public String showLoginPage(Model model) {
@@ -77,7 +83,11 @@ public class LogInController {
 
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
-            if (user.getPassword() != null && user.getPassword().equals(password)) {
+
+            // SỬA ĐỔI LOGIC XÁC THỰC MẬT KHẨU: Dùng BCryptPasswordEncoder.matches()
+            // Nó so sánh mật khẩu plaintext (password) với chuỗi mã hóa trong DB (user.getPassword())
+            if (user.getPassword() != null && passwordEncoder.matches(password, user.getPassword())) {
+
                 // Lưu session: sử dụng SessionService
                 sessionService.set("currentUser", user);
                 // xử lý remember cookie
@@ -143,7 +153,9 @@ public class LogInController {
                 user.setUsername(email.split("@")[0]);
                 user.setEmail(email);
                 user.setFullName(name != null ? name : email.split("@")[0]);
-                user.setPassword(""); // không dùng cho Google login
+                // LƯU Ý: Mật khẩu cho Google login nên được lưu dưới dạng chuỗi rỗng
+                // hoặc null để phân biệt với tài khoản LOCAL có mật khẩu hash.
+                user.setPassword("");
                 user.setGender(true); // mặc định true (hoặc false tùy bạn)
                 user.setRole("USER");
                 user.setProvider("GOOGLE");
