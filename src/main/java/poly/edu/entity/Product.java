@@ -1,6 +1,8 @@
 package poly.edu.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,23 +22,29 @@ public class Product {
     @Column(name = "product_id")
     private Long productId;
 
+    @NotNull(message = "Chưa nhập tên sản phẩm")
     @Column(name = "product_name", nullable = false, length = 200)
     private String productName;
 
     @Column(name = "description", length = 2000)
     private String description;
 
+    @NotNull(message = "Chưa nhập giá sản phẩm")
+    @Min(value = 1000, message = "Giá sản phẩm tối thiểu là 1000")
     @Column(name = "price", nullable = false, precision = 18, scale = 2)
     private BigDecimal price;
 
     @Column(name = "discount_price", precision = 18, scale = 2)
     private BigDecimal discountPrice;
 
+    @NotNull(message = "Chưa nhập số lượng sản phẩm")
+    @Min(value = 1, message = "Số lượng sản phẩm tối thiểu là 1")
     @Column(name = "stock_quantity")
     private Integer stockQuantity;
 
-    @Column(name = "category_id", nullable = false)
-    private Long categoryId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
     @Column(name = "is_featured")
     private Boolean isFeatured;
@@ -55,6 +63,9 @@ public class Product {
 
     @Column(name = "sold_count")
     private Integer soldCount;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<CartItem> cartItems = new java.util.ArrayList<>();
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -78,7 +89,6 @@ public class Product {
         updatedAt = LocalDateTime.now();
     }
 
-    // Transient field - không lưu vào DB
     @Transient
     private String categoryName; // Dùng để hiển thị tên category
 
@@ -96,10 +106,16 @@ public class Product {
     // Method tính % giảm giá
     public Integer getDiscountPercent() {
         if (discountPrice != null && discountPrice.compareTo(BigDecimal.ZERO) > 0 && price != null) {
-            BigDecimal discount = price.subtract(discountPrice);
-            BigDecimal percent = discount.divide(price, 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
+            java.math.BigDecimal discount = price.subtract(discountPrice);
+            java.math.BigDecimal percent = discount.divide(price, 2, java.math.BigDecimal.ROUND_HALF_UP).multiply(new java.math.BigDecimal(100));
             return percent.intValue();
         }
         return 0;
+    }
+
+    // helper để lấy tên category dễ dùng trong view (tránh NPE nếu lazy)
+    public String getCategoryName() {
+        if (category != null) return category.getCategoryName();
+        return categoryName;
     }
 }

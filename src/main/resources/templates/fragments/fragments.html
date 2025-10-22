@@ -6,42 +6,36 @@
 </head>
 <body>
 
-<!-- ==================== HEADER FRAGMENT ==================== -->
 <div th:fragment="header">
     <nav class="navbar-header">
         <div class="navbar-header-container">
-            <!-- Logo -->
             <a th:href="@{/home}" class="logo-header">Shopii</a>
 
-            <!-- Search Box & Category Dropdown (Tạm thời để trống, làm ở bước 3) -->
             <div class="search-category-section">
-                <!-- Sẽ thêm ở bước 3 -->
             </div>
 
-            <!-- Menu & Cart -->
             <div class="nav-menu-section">
-                <!-- TRẠNG THÁI 1: CHƯA ĐĂNG NHẬP -->
                 <div th:if="${session.currentUser == null}" class="auth-section">
                     <div class="auth-buttons-header">
                         <a th:href="@{/login}" class="btn-auth-header btn-login-header">Đăng nhập</a>
                         <a th:href="@{/register}" class="btn-auth-header btn-register-header">Đăng ký</a>
                     </div>
-                    <a th:href="@{/cart}" class="cart-icon-header">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                    <a th:href="@{/cart}" class="cart-icon-header" aria-label="Giỏ hàng">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="cart-svg" aria-hidden="true">
+                            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45
+                                c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45
+                                c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16
+                                16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
                         </svg>
-                        <span class="cart-badge-header">0</span>
+                        <span id="cart-count" class="cart-count-badge"
+                              th:text="${session.currentUser != null ? session.cartCount : 0}">0</span>
                     </a>
                 </div>
 
-                <!-- TRẠNG THÁI 2: USER ĐÃ ĐĂNG NHẬP (role = 'U') -->
                 <div th:if="${session.currentUser != null && session.currentUser.role == 'USER'}" class="user-menu-section">
-                    <!-- Welcome message -->
                     <div class="welcome-text">Xin chào, <span th:text="${session.currentUser.username}">User</span></div>
 
-                    <!-- Menu ngang -->
                     <div class="horizontal-menu">
-                        <!-- Tài khoản Dropdown -->
                         <div class="menu-item-header dropdown-header">
                             <a href="javascript:void(0)" class="menu-link-header">Tài khoản ▼</a>
                             <div class="dropdown-content-header">
@@ -51,7 +45,6 @@
                             </div>
                         </div>
 
-                        <!-- Đơn hàng Dropdown -->
                         <div class="menu-item-header dropdown-header">
                             <a href="javascript:void(0)" class="menu-link-header">Đơn hàng ▼</a>
                             <div class="dropdown-content-header">
@@ -63,29 +56,27 @@
                             </div>
                         </div>
 
-                        <!-- Logout Button -->
                         <form th:action="@{/logout}" method="post" style="display: inline; margin: 0;">
                             <button type="submit" class="btn-logout-header">Đăng xuất</button>
                         </form>
                     </div>
 
-                    <!-- Cart Icon -->
-                    <a th:href="@{/cart}" class="cart-icon-header">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                    <a th:href="@{/cart}" class="cart-icon-header" aria-label="Giỏ hàng">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="cart-svg" aria-hidden="true">
+                            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45
+                                c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45
+                                c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16
+                                16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
                         </svg>
-                        <span class="cart-badge-header">0</span>
+                        <span id="cart-count" class="cart-count-badge"
+                              th:text="${session.currentUser != null ? session.cartCount : 0}">0</span>
                     </a>
                 </div>
 
-                <!-- TRẠNG THÁI 3: ADMIN ĐÃ ĐĂNG NHẬP (role = 'A') -->
                 <div th:if="${session.currentUser != null && session.currentUser.role == 'ADMIN'}" class="admin-menu-section">
-                    <!-- Welcome message -->
                     <div class="welcome-text">Xin chào, <span th:text="${session.currentUser.username}">Admin</span></div>
 
-                    <!-- Menu ngang -->
                     <div class="horizontal-menu">
-                        <!-- Tài khoản Dropdown -->
                         <div class="menu-item-header dropdown-header">
                             <a href="javascript:void(0)" class="menu-link-header">Tài khoản ▼</a>
                             <div class="dropdown-content-header">
@@ -95,7 +86,6 @@
                             </div>
                         </div>
 
-                        <!-- Đơn hàng Dropdown -->
                         <div class="menu-item-header dropdown-header">
                             <a href="javascript:void(0)" class="menu-link-header">Đơn hàng ▼</a>
                             <div class="dropdown-content-header">
@@ -107,7 +97,6 @@
                             </div>
                         </div>
 
-                        <!-- Quản lý Dropdown (Admin only) -->
                         <div class="menu-item-header dropdown-header">
                             <a href="javascript:void(0)" class="menu-link-header">Quản lý ▼</a>
                             <div class="dropdown-content-header">
@@ -119,18 +108,20 @@
                             </div>
                         </div>
 
-                        <!-- Logout Button -->
                         <form th:action="@{/logout}" method="post" style="display: inline; margin: 0;">
                             <button type="submit" class="btn-logout-header">Đăng xuất</button>
                         </form>
                     </div>
 
-                    <!-- Cart Icon -->
-                    <a th:href="@{/cart}" class="cart-icon-header">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                    <a th:href="@{/cart}" class="cart-icon-header" aria-label="Giỏ hàng">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="cart-svg" aria-hidden="true">
+                            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45
+                                c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45
+                                c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16
+                                16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
                         </svg>
-                        <span class="cart-badge-header">0</span>
+                        <span id="cart-count" class="cart-count-badge"
+                              th:text="${session.currentUser != null ? session.cartCount : 0}">0</span>
                     </a>
                 </div>
             </div>
@@ -331,20 +322,6 @@
         }
 
         /* ============ CART ICON ============ */
-        .cart-icon-header {
-            background-color: white;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            transition: all 0.3s;
-            text-decoration: none;
-            flex-shrink: 0;
-        }
-
         .cart-icon-header:hover {
             transform: scale(1.1);
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
@@ -356,22 +333,222 @@
             fill: #667eea;
         }
 
-        .cart-badge-header {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background-color: #ff4757;
-            color: white;
-            min-width: 22px;
-            height: 22px;
-            border-radius: 11px;
-            display: flex;
+        .cart-icon-header svg {
+            width: 32px;
+            height: 32px;
+            fill: #fff; /* hoặc màu bạn muốn */
+        }
+
+        /* Cart icon wrapper */
+        .cart-icon-header {
+            position: relative;         /* reference for badge */
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-            padding: 0 6px;
+            width: 44px;                /* clickable area */
+            height: 44px;
+            padding: 6px;               /* make it comfy to click */
+            background: transparent;    /* <-- remove white circle */
+            border-radius: 8px;         /* subtle rounding if you want a background later */
+            text-decoration: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            color: inherit;
         }
+
+        /* hover effect (subtle) */
+        .cart-icon-header:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+        }
+
+        /* the SVG icon inside */
+        .cart-icon-header .cart-svg {
+            width: 28px;
+            height: 28px;
+            fill: white;                /* white icon on purple header — change if needed */
+            display: block;
+        }
+
+        /* badge (small red circle top-right) */
+        .cart-count-badge {
+            position: absolute;
+            top: 6px;                   /* tweak this to move vertically */
+            right: 6px;                 /* tweak horizontally */
+            background: #ff4757;        /* red */
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            border-radius: 50%;
+            padding: 3px 6px;           /* pill shape for 2+ digits */
+            min-width: 18px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            pointer-events: none;       /* clicks pass through badge to link */
+        }
+
+        /* if count is 0, hide badge (optional) */
+        .cart-count-badge.hidden {
+            display: none;
+        }
+
+        /* ============ CART PANEL STYLES (MỚI) ============ */
+        /* Overlay - Lớp mờ đằng sau */
+        #cart-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1050; /* Cao hơn navbar */
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        #cart-overlay.show {
+            opacity: 1;
+        }
+        #cart-overlay.hidden {
+            display: none;
+        }
+
+        /* Panel - Khung giỏ hàng trượt */
+        #cart-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 380px; /* Điều chỉnh chiều rộng theo hình */
+            height: 100%;
+            background-color: #fff;
+            z-index: 1051;
+            box-shadow: -6px 0 15px rgba(0, 0, 0, 0.15);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        #cart-panel.show {
+            transform: translateX(0);
+        }
+        #cart-panel.hidden {
+            display: none;
+        }
+
+        /* Header Giỏ hàng */
+        .cart-header-panel {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .cart-close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            line-height: 1;
+        }
+        .cart-close-btn:hover {
+            color: #333;
+        }
+
+        /* Danh sách sản phẩm */
+        .cart-items {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px 20px;
+        }
+        .cart-item {
+            display: flex;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            align-items: flex-start;
+        }
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+        .cart-item-img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            border: 1px solid #f5f5f5;
+            border-radius: 4px;
+        }
+        .cart-item-info {
+            flex-grow: 1;
+        }
+        .cart-item-name {
+            font-weight: 500;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 2px;
+        }
+        .cart-item-price-line {
+            font-size: 13px;
+            color: #777;
+        }
+        .cart-item-quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .qty-input {
+            width: 40px;
+            padding: 3px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        /* Phần tổng tiền và nút hành động */
+        .cart-footer-panel {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            background-color: #f9f9f9;
+        }
+        .cart-total-line {
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .cart-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-clear-cart, .btn-checkout-cart {
+            flex: 1;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.2s;
+            border: none;
+        }
+        .btn-clear-cart {
+            background-color: #ffcccc; /* Màu Xóa tất cả */
+            color: #d63031;
+        }
+        .btn-checkout-cart {
+            background-color: #00b894; /* Màu Thanh toán */
+            color: #fff;
+        }
+        .btn-clear-cart:hover {
+            background-color: #ff9999;
+        }
+        .btn-checkout-cart:hover {
+            background-color: #008f75;
+        }
+
     </style>
 
     <script>
@@ -410,7 +587,6 @@
 </div>
 
 
-<!-- ==================== FOOTER FRAGMENT ==================== -->
 <div th:fragment="footer">
     <footer class="footer">
         <div class="footer-content">
@@ -447,254 +623,6 @@
     </style>
 </div>
 
-
-<!-- ==================== PRODUCT GRID FRAGMENT ==================== -->
-<div th:fragment="productGrid(products, sectionTitle)">
-    <h2 class="section-title" th:text="${sectionTitle}">Sản phẩm</h2>
-    <div class="product-grid">
-        <div class="product-card" th:each="product : ${products}">
-            <!-- Badge -->
-            <span class="product-badge badge-new"
-                  th:if="${product.isNew}"
-                  th:classappend="${product.isOnSale ? 'badge-sale' : (product.isFeatured ? 'badge-hot' : 'badge-new')}">
-                <span th:if="${product.isNew}">MỚI</span>
-                <span th:if="${product.isOnSale}" th:text="'-' + ${product.discountPercent} + '%'">-20%</span>
-                <span th:if="${product.isFeatured && !product.isNew && !product.isOnSale}">BÁN CHẠY</span>
-            </span>
-
-            <!-- Product Image -->
-            <div class="product-image">
-                <img th:if="${product.imageUrl != null}"
-                     th:src="@{${product.imageUrl}}"
-                     th:alt="${product.productName}"
-                     style="width: 100%; height: 100%; object-fit: cover;">
-                <span th:if="${product.imageUrl == null}"
-                      th:text="${product.productName}">Product</span>
-            </div>
-
-            <!-- Product Info -->
-            <div class="product-info">
-                <div class="product-category" th:text="${product.categoryName}">Điện thoại</div>
-                <div class="product-name" th:text="${product.productName}">Tên sản phẩm</div>
-
-                <div class="product-price">
-                    <span class="price-current" th:text="${#numbers.formatDecimal(product.finalPrice, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</span>
-                    <span class="price-original"
-                          th:if="${product.discountPrice != null && product.discountPrice > 0}"
-                          th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</span>
-                </div>
-
-                <div class="product-actions">
-                    <form th:action="@{/cart/add}" method="post" style="display: inline; flex: 1;">
-                        <input type="hidden" name="productId" th:value="${product.productId}">
-                        <button type="submit" class="btn-add-cart">Thêm vào giỏ</button>
-                    </form>
-                    <a th:href="@{/product/{id}(id=${product.productId})}" class="btn-view-detail">Chi tiết</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <style>
-        .section-title {
-            font-size: 28px;
-            font-weight: bold;
-            margin: 30px 0 20px;
-            color: #333;
-            position: relative;
-            padding-left: 15px;
-        }
-
-        .section-title::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 5px;
-            height: 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 3px;
-        }
-
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-
-        /* Responsive */
-        @media (max-width: 1400px) {
-            .product-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        @media (max-width: 1024px) {
-            .product-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .product-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 480px) {
-            .product-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .product-card {
-            background-color: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            transition: all 0.3s;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
-
-        .product-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            z-index: 10;
-        }
-
-        .badge-new {
-            background-color: #10ac84;
-            color: white;
-        }
-
-        .badge-sale {
-            background-color: #ff4757;
-            color: white;
-        }
-
-        .badge-hot {
-            background-color: #ff6348;
-            color: white;
-        }
-
-        .product-image {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-            background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            font-size: 14px;
-        }
-
-        .product-info {
-            padding: 15px;
-        }
-
-        .product-category {
-            font-size: 12px;
-            color: #667eea;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-bottom: 5px;
-        }
-
-        .product-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 10px;
-            line-height: 1.4;
-            height: 44px;
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-        }
-
-        .product-price {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .price-current {
-            font-size: 20px;
-            font-weight: bold;
-            color: #ff4757;
-        }
-
-        .price-original {
-            font-size: 14px;
-            color: #999;
-            text-decoration: line-through;
-        }
-
-        .product-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-add-cart {
-            flex: 1;
-            padding: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s;
-            width: 100%;
-        }
-
-        .btn-add-cart:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-view-detail {
-            padding: 10px 15px;
-            background-color: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-view-detail:hover {
-            background-color: #667eea;
-            color: white;
-        }
-    </style>
-</div>
-
-
-<!-- ==================== SEARCH & FILTER FRAGMENT ==================== -->
 <div th:fragment="searchFilter">
     <div class="search-section">
         <form th:action="@{/search}" method="get" class="search-container">

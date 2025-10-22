@@ -1,9 +1,13 @@
 package poly.edu.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -17,9 +21,13 @@ public class Category {
     @Column(name = "category_id")
     private Long categoryId;
 
+    @NotNull(message = "Chưa nhập tên category")
     @Column(name = "category_name", nullable = false, length = 100)
     private String categoryName;
 
     @Column(name = "description", length = 500)
     private String description;
+
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = false, fetch = FetchType.LAZY)
+    private List<Product> products = new ArrayList<>();
 }
