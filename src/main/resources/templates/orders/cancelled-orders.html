@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Đơn hàng đã hủy - Shopii</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: #f5f5f5;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 20px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+    }
+    .page-header {
+      margin-bottom: 32px;
+      text-align: left;
+    }
+    .page-header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #c62828;
+    }
+    .page-header p {
+      color: #666;
+      margin-top: 4px;
+    }
+    .order-list {
+      margin-top: 10px;
+    }
+    .cancelled-order-card {
+      background: #fff2f0;
+      border-radius: 9px;
+      border: 1px solid #f5c6cb;
+      margin-bottom: 22px;
+      padding: 18px 24px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 4px rgba(198,40,40,0.07);
+    }
+    .cancelled-order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .cancelled-order-header-left h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 3px;
+    }
+    .cancelled-order-header-left p {
+      font-size: 0.95rem;
+      color: #5c5c5c;
+    }
+    .cancelled-order-status {
+      font-size: 1rem;
+      color: #c62828;
+      font-weight: 600;
+      background: #ffebee;
+      padding: 6px 18px;
+      border-radius: 16px;
+    }
+    .cancelled-order-body {
+      font-size: 1rem;
+      color: #222;
+    }
+    .cancelled-order-footer {
+      margin-top: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #f5c6cb;
+      padding-top: 10px;
+    }
+    .order-total {
+      font-size: 1.07rem;
+      font-weight: 600;
+      color: #d32f2f;
+    }
+    .order-actions a {
+      padding: 7px 16px;
+      border-radius: 6px;
+      background: #fff;
+      color: #d32f2f;
+      border: 1px solid #d32f2f;
+      font-weight: 500;
+      text-decoration: none;
+      transition: background 0.18s, color 0.18s;
+      margin-left: 6px;
+    }
+    .order-actions a:hover {
+      background: #ffd4d4;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 0;
+      color: #888;
+    }
+    .empty-state svg {
+      width: 60px;
+      height: 60px;
+      color: #bbb;
+      margin-bottom: 10px;
+    }
+    .empty-state h2 {
+      font-size: 1.3rem;
+      margin-bottom: 4px;
+      color: #c62828;
+    }
+  </style>
+</head>
+<body>
+<div th:replace="~{fragments/fragments :: header}"></div>
+<div class="container">
+  <div class="page-header">
+    <h1>Đơn hàng đã hủy</h1>
+    <p>Xem lại các đơn hàng bạn đã hủy</p>
+  </div>
+
+  <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+  <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+  <!-- Empty state -->
+  <div th:if="${orders == null or #lists.isEmpty(orders)}" class="empty-state">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+    </svg>
+    <h2>Chưa có đơn hàng nào bị hủy</h2>
+    <p>Bạn chưa có đơn hàng nào ở trạng thái đã hủy</p>
+  </div>
+
+  <!-- Cancelled orders list -->
+  <div class="order-list" th:if="${orders != null and !#lists.isEmpty(orders)}">
+    <div th:each="order : ${orders}" th:if="${order.status == 'Cancelled'}" class="cancelled-order-card">
+      <div class="cancelled-order-header">
+        <div class="cancelled-order-header-left">
+          <h3>Đơn hàng: <span th:text="${order.orderNumber}"></span></h3>
+          <p>Ngày đặt: <span th:text="${#dates.format(order.createdAt,'dd/MM/yyyy')}"></span></p>
+        </div>
+        <div class="cancelled-order-status" th:text="${order.status}"></div>
+      </div>
+      <div class="cancelled-order-body">
+        <div>
+          <strong>Phương thức thanh toán:</strong>
+          <span th:text="${order.paymentMethod}"></span>
+        </div>
+        <div>
+          <strong>Người nhận:</strong>
+          <span th:text="${order.shippingFullName}"></span>
+          <span th:text="${order.shippingPhone}" style="margin-left:8px;"></span>
+        </div>
+        <div>
+          <strong>Địa chỉ giao hàng:</strong>
+          <span th:text="${order.shippingAddress}"></span>
+        </div>
+      </div>
+      <div class="cancelled-order-footer">
+        <div class="order-total">Tổng cộng: <span th:text="${order.formattedTotalAmount + '₫'}"></span></div>
+        <div class="order-actions">
+          <a th:href="@{'/detail/' + ${order.orderId}}">Xem chi tiết</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>
+  <div th:replace="~{fragments/fragments :: footer}"></div>
+</footer>
+</body>
+</html>

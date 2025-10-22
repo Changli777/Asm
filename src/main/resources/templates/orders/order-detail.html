@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết đơn hàng - Shopii</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 28px 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+        }
+        .page-header {
+            margin-bottom: 32px;
+            text-align: left;
+        }
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1976d2;
+        }
+        .page-header p {
+            color: #666;
+            margin-top: 4px;
+        }
+        .order-info {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 18px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 4px rgba(25, 118, 210, 0.07);
+        }
+        .order-info-row {
+            margin-bottom: 10px;
+            font-size: 1.05rem;
+        }
+        .order-info-label {
+            font-weight: 600;
+            color: #333;
+            margin-right: 8px;
+        }
+        .order-status {
+            display: inline-block;
+            font-size: 1rem;
+            color: #fff;
+            background: #1976d2;
+            font-weight: 500;
+            padding: 4px 18px;
+            border-radius: 16px;
+        }
+        .order-status.cancelled {
+            background: #d32f2f;
+        }
+        .order-status.completed {
+            background: #388e3c;
+        }
+        .order-status.pending {
+            background: #ffa000;
+            color: #333;
+        }
+        .order-detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 28px;
+        }
+        .order-detail-table th, .order-detail-table td {
+            border-bottom: 1px solid #f0f0f0;
+            padding: 12px 8px;
+            text-align: left;
+        }
+        .order-detail-table th {
+            background: #f7f7fa;
+            color: #1976d2;
+            font-weight: 600;
+        }
+        .order-detail-table td {
+            background: #fff;
+            color: #222;
+            vertical-align: middle;
+        }
+        .product-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #ececec;
+            margin-right: 10px;
+        }
+        .total-row {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #c62828;
+            text-align: right;
+        }
+        .back-btn {
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 6px;
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            text-decoration: none;
+            margin-top: 14px;
+            transition: background 0.18s;
+        }
+        .back-btn:hover {
+            background: #135ba1;
+        }
+        @media (max-width: 700px) {
+            .container { padding: 8px 3px; }
+            .order-detail-table th, .order-detail-table td { padding: 6px 3px; font-size: 0.97rem; }
+        }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/fragments :: header}"></div>
+<div class="container">
+    <div class="page-header">
+        <h1>Chi tiết đơn hàng</h1>
+        <p>Thông tin đơn hàng của bạn</p>
+    </div>
+
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+
+    <div class="order-info">
+        <div class="order-info-row">
+            <span class="order-info-label">Mã đơn hàng:</span>
+            <span th:text="${order.orderNumber}"></span>
+        </div>
+        <div class="order-info-row">
+            <span class="order-info-label">Ngày đặt:</span>
+            <span th:text="${#dates.format(order.createdAt,'dd/MM/yyyy HH:mm')}"></span>
+        </div>
+        <div class="order-info-row">
+            <span class="order-info-label">Trạng thái:</span>
+            <span th:text="${order.status}"
+                  th:classappend="'order-status ' + ${order.status.toLowerCase()}"></span>
+        </div>
+        <div class="order-info-row">
+            <span class="order-info-label">Phương thức thanh toán:</span>
+            <span th:text="${order.paymentMethod}"></span>
+        </div>
+        <div class="order-info-row">
+            <span class="order-info-label">Người nhận:</span>
+            <span th:text="${order.shippingFullName}"></span>
+            <span th:text="${order.shippingPhone}" style="margin-left:8px;"></span>
+        </div>
+        <div class="order-info-row">
+            <span class="order-info-label">Địa chỉ giao hàng:</span>
+            <span th:text="${order.shippingAddress}"></span>
+        </div>
+    </div>
+
+    <table class="order-detail-table">
+        <thead>
+        <tr>
+            <th>Ảnh</th>
+            <th>Sản phẩm</th>
+            <th>Giá</th>
+            <th>Số lượng</th>
+            <th>Tạm tính</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="detail : ${orderDetails}">
+            <td>
+                <img th:src="${detail.product.imageUrl}" alt="Ảnh sản phẩm" class="product-image">
+            </td>
+            <td th:text="${detail.productName}"></td>
+            <td th:text="${detail.formattedPrice + '₫'}"></td>
+            <td th:text="${detail.quantity}"></td>
+                <td th:text="${detail.formattedSubtotal + '₫'}"></td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="4" class="total-row">Tổng cộng:</td>
+            <td class="total-row" th:text="${order.formattedTotalAmount + '₫'}"></td>
+        </tr>
+        </tfoot>
+    </table>
+
+    <a th:href="@{'/orders?status=' + ${order.status.toLowerCase()}}" class="back-btn">Quay lại danh sách đơn hàng</a>
+</div>
+
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div th:if="${message}">
+    <script th:inline="javascript">
+        Swal.fire({
+            icon: 'success',
+            title: 'Thành công!',
+            text: [[${message}]],
+            showConfirmButton: false,
+            timer: 1800
+        });
+    </script>
+</div>
+
+<div th:if="${error}">
+    <script th:inline="javascript">
+        Swal.fire({
+            icon: 'error',
+            title: 'Thất bại!',
+            text: [[${error}]],
+            showConfirmButton: true
+        });
+    </script>
+</div>
+
+<!-- Overlay & panel -->
+<div id="cart-overlay" class="hidden"></div>
+<div id="cart-panel" class="hidden"></div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        console.log("[cart] Ready");
+
+        const overlay = document.getElementById("cart-overlay");
+        const panel = document.getElementById("cart-panel");
+
+        // khi click icon giỏ hàng trong header
+        document.body.addEventListener("click", function(e) {
+            const icon = e.target.closest(".cart-icon-header");
+            if (!icon) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            console.log("[cart] Icon clicked, loading fragment...");
+
+            fetch("/cart")
+                .then(res => res.text())
+                .then(html => {
+                    panel.innerHTML = html;
+                    overlay.classList.remove("hidden");
+                    panel.classList.remove("hidden");
+                    requestAnimationFrame(() => {
+                        overlay.classList.add("show");
+                        panel.classList.add("show");
+                    });
+                })
+                .catch(err => console.error("[cart] Lỗi khi load fragment:", err));
+        });
+
+        // đóng khi click ra ngoài
+        overlay.addEventListener("click", closeCart);
+
+        // đóng khi bấm nút X
+        panel.addEventListener("click", e => {
+            if (e.target.classList.contains("cart-close-btn") || e.target.classList.contains("close-cart")) {
+                closeCart();
+            }
+        });
+
+        // ESC để đóng
+        document.addEventListener("keydown", e => {
+            if (e.key === "Escape") closeCart();
+        });
+
+        function closeCart() {
+            overlay.classList.remove("show");
+            panel.classList.remove("show");
+            setTimeout(() => {
+                overlay.classList.add("hidden");
+                panel.classList.add("hidden");
+            }, 300);
+        }
+    });
+    // gọi khi trang load
+    function updateCartCount() {
+        fetch("/cart/count")
+            .then(res => res.text())
+            .then(count => {
+                // cập nhật tất cả các phần tử .cart-count-badge trên trang
+                document.querySelectorAll('.cart-count-badge').forEach(el => {
+                    // nếu server trả 0 và bạn muốn ẩn badge khi 0
+                    if (Number(count) <= 0) {
+                        el.classList.add('hidden');  // bạn đã có css .hidden
+                        el.textContent = 0;
+                    } else {
+                        el.classList.remove('hidden');
+                        el.textContent = count;
+                    }
+                });
+            })
+            .catch(err => console.error('[cart] Không thể lấy count', err));
+    }
+
+    // gọi khi DOM sẵn sàng
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCartCount();
+    });
+    document.addEventListener("DOMContentLoaded", function() {
+
+        function setupRowPagination(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            function attachPagination() {
+                container.querySelectorAll(".grid-pagination button").forEach(btn => {
+                    btn.onclick = function(e) {
+                        e.preventDefault();
+                        const url = this.getAttribute("data-url");
+                        if (!url) return;
+
+                        // slide out current
+                        container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                        container.style.transform = 'translateX(-100%)';
+                        container.style.opacity = 0;
+
+                        fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+                            .then(res => res.text())
+                            .then(html => {
+                                const tempDiv = document.createElement('div');
+                                tempDiv.innerHTML = html;
+
+                                // tìm đúng fragment mới trong response
+                                const newSection = tempDiv.querySelector('#' + containerId);
+                                if (newSection) {
+                                    setTimeout(() => {
+                                        container.innerHTML = newSection.innerHTML;
+
+                                        // slide in
+                                        container.style.transform = 'translateX(100%)';
+                                        container.style.opacity = 0;
+                                        requestAnimationFrame(() => {
+                                            container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                                            container.style.transform = 'translateX(0)';
+                                            container.style.opacity = 1;
+                                        });
+
+                                        // attach listener cho button mới
+                                        attachPagination();
+
+                                        // update URL để giữ lịch sử
+                                        history.pushState(null, '', url);
+                                    }, 300);
+                                }
+                            })
+                            .catch(err => console.error('AJAX pagination error:', err));
+                    };
+                });
+            }
+
+            attachPagination();
+        }
+
+        // gọi cho cả 3 row
+        setupRowPagination('product-grid-new');
+        setupRowPagination('product-grid-sale');
+        setupRowPagination('product-grid-hot');
+
+    });
+</script>
+
+<footer>
+    <div th:replace="~{fragments/fragments :: footer}"></div>
+</footer>
+</body>
+</html>

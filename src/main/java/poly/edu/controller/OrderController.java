@@ -10,6 +10,8 @@ import poly.edu.entity.*;
 import poly.edu.service.OrderDetailService;
 import poly.edu.service.OrderService;
 import poly.edu.service.SessionService;
+
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,7 +27,7 @@ public class OrderController {
     @Autowired
     private SessionService sessionService;
 
-    // ============ TRANG PENDING ORDERS ============
+    // ============ TRANG PENDING/CANCELLED ORDERS ============
     @GetMapping("/orders")
     public String viewOrders(
             @RequestParam(defaultValue = "pending") String status,
@@ -40,7 +42,7 @@ public class OrderController {
             return "redirect:/login";
         }
 
-        // Lấy danh sách đơn hàng
+        // Lấy danh sách đơn hàng theo status
         List<Order> orders = orderService.findByStatusAndUser(status, currentUser, sort);
 
         // Format tiền tệ trước khi gửi sang view
@@ -62,6 +64,16 @@ public class OrderController {
         model.addAttribute("sort", sort);
         model.addAttribute("currentUser", currentUser);
 
+        // Nếu trạng thái là cancelled thì map sang cancelled-orders.html
+        if ("cancelled".equalsIgnoreCase(status)) {
+            return "orders/cancelled-orders";
+        } else if ("shipping".equalsIgnoreCase(status)) {
+            return "orders/shipping-orders";
+        } else if ("delivered".equalsIgnoreCase(status)) {
+            return "orders/delivered-orders";
+        }
+
+        // Mặc định là pending-orders.html
         return "orders/pending-orders";
     }
 
@@ -88,12 +100,25 @@ public class OrderController {
         Order order = optionalOrder.get();
         List<OrderDetail> orderDetails = orderDetailService.findByOrder(order);
 
+        // Format tiền tệ trước khi gửi sang view
+        DecimalFormat formatter = new DecimalFormat("#,###");
+
+        // Format tổng tiền
+        order.setFormattedTotalAmount(formatter.format(order.getTotal()));
+
+        // Format detail
+        for (OrderDetail detail : orderDetails) {
+            detail.setFormattedPrice(formatter.format(detail.getPrice()));
+            detail.setFormattedSubtotal(formatter.format(detail.getSubtotal()));
+        }
+
         model.addAttribute("order", order);
         model.addAttribute("orderDetails", orderDetails);
         model.addAttribute("currentUser", currentUser);
 
         return "orders/order-detail";
     }
+
 
     // ============ HỦY ĐƠN HÀNG ============
     @PostMapping("/cancel/{orderId}")
