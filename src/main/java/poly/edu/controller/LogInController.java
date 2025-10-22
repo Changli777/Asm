@@ -32,13 +32,13 @@ public class LogInController {
 
     //Link: http://localhost:8080/login
     @Autowired
-    private ParamService paramService;
-    @Autowired
     private CookieService cookieService;
     @Autowired
     private SessionService sessionService;
     @Autowired
     private UserDAO userDAO;
+    @Autowired
+    private HttpServletRequest request;
 
     @GetMapping("/login")
     public String showLoginPage(Model model) {
@@ -50,8 +50,9 @@ public class LogInController {
             loginForm.setUsername(remembered);
             loginForm.setRemember(true);
         }
+
         model.addAttribute("loginForm", loginForm);
-        model.addAttribute("user", new poly.edu.entity.User());
+        model.addAttribute("user", new User());
         return "login";
     }
 
@@ -86,7 +87,8 @@ public class LogInController {
                 } else {
                     cookieService.remove("user");
                 }
-                return "redirect:/home";
+                String referer = request.getHeader("Referer");
+                return "redirect:" + (referer != null ? referer : "/");
             } else {
                 model.addAttribute("error", "Sai mật khẩu!");
                 model.addAttribute("loginForm", loginForm);
@@ -104,7 +106,7 @@ public class LogInController {
     // ===== Đăng xuất =====
     @PostMapping("/logout")
     public String logout(Model model) {
-        sessionService.remove("username");
+        sessionService.remove("currentUser");
         cookieService.remove("user");
         model.addAttribute("message", "Đăng xuất thành công!");
         return "redirect:/login";
@@ -113,6 +115,7 @@ public class LogInController {
     // ===== Đăng nhập bằng Google =====
     @PostMapping("/login/google")
     public String loginWithGoogle(@RequestParam("credential") String idTokenString,
+                                  @RequestParam(value = "remember", required = false) String rememberParam,
                                   HttpSession session, Model model)
             throws GeneralSecurityException, IOException {
 
@@ -150,10 +153,16 @@ public class LogInController {
                 user.setProviderId(googleId);
                 userDAO.save(user);
             }
-
             // Lưu session
-            session.setAttribute("currentUser", user);
-            return "redirect:/home";
+            sessionService.set("currentUser", user);
+            boolean rememberMe = "true".equals(rememberParam);
+            if (rememberMe) {
+                cookieService.add("user", user.getUsername(), 24 * 30);
+            } else {
+                cookieService.remove("user");
+            }
+            String referer = request.getHeader("Referer");
+            return "redirect:" + (referer != null ? referer : "/");
         } else {
             model.addAttribute("error", "Đăng nhập Google thất bại!");
             return "login";

@@ -82,29 +82,23 @@ public class CartItemServiceImpl implements CartItemService {
     }
 
     @Override
-    public void updateQuantity(Long cartItemId, int newQuantity) {
-        CartItem item = cartItemDAO.findById(cartItemId)
-                .orElseThrow(() -> new RuntimeException("Cart item not found"));
-
-        if (newQuantity <= 0) {
-            cartItemDAO.delete(item); // Xóa khi = 0
-        } else {
-            item.setQuantity(newQuantity);
-            cartItemDAO.save(item); // Cập nhật lại
-        }
+    public Optional<CartItem> findById(Long id) {
+        return cartItemDAO.findById(id);
     }
 
     @Override
     public BigDecimal calculateTotal(User user) {
-        List<CartItem> cartItems = cartItemDAO.findByUser(user);
-        return cartItems.stream()
-                .map(ci -> ci.getProduct().getFinalPrice()
-                        .multiply(BigDecimal.valueOf(ci.getQuantity())))
+        List<CartItem> items = cartItemDAO.findByUser(user);
+        return items.stream()
+                .map(item -> {
+                    BigDecimal price = item.getProduct().getDiscountPrice() != null
+                            ? item.getProduct().getDiscountPrice()
+                            : item.getProduct().getPrice();
+                    return price.multiply(BigDecimal.valueOf(item.getQuantity()));
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    @Override
-    public Optional<CartItem> findById(Long id) {
-        return cartItemDAO.findById(id);
-    }
+
+
 }

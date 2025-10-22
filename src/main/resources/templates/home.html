@@ -45,7 +45,6 @@
         #cart-overlay.show {
             opacity: 1;
         }
-
         #cart-panel {
             position: fixed;
             top: 0;
@@ -65,7 +64,6 @@
         #cart-panel.show {
             right: 0;
         }
-
         .cart-close-btn {
             position: absolute;
             top: 10px;
@@ -87,11 +85,11 @@
 
 <div class="container">
     <!-- Row 1: New -->
-    <div th:replace="~{fragments/productGrid :: productGrid(${newProductsPage}, 'Mới', ${newPrevUrl}, ${newNextUrl})}"></div>
+    <div th:replace="~{fragments/productGrid :: productGrid(${newProductsPage}, 'Mới', ${newPrevUrl}, ${newNextUrl}, 'new')}"></div>
     <!-- Row 2: Sale -->
-    <div th:replace="~{fragments/productGrid :: productGrid(${saleProductsPage}, 'Giảm giá', ${salePrevUrl}, ${saleNextUrl})}"></div>
+    <div th:replace="~{fragments/productGrid :: productGrid(${saleProductsPage}, 'Giảm giá', ${salePrevUrl}, ${saleNextUrl}, 'sale')}"></div>
     <!-- Row 3: Featured/Hot -->
-    <div th:replace="~{fragments/productGrid :: productGrid(${hotProductsPage}, 'Nổi bật', ${hotPrevUrl}, ${hotNextUrl})}"></div>
+    <div th:replace="~{fragments/productGrid :: productGrid(${hotProductsPage}, 'Nổi bật', ${hotPrevUrl}, ${hotNextUrl}, 'hot')}"></div>
 
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -130,19 +128,6 @@
 
         const overlay = document.getElementById("cart-overlay");
         const panel = document.getElementById("cart-panel");
-
-        // cập nhật số lượng giỏ hàng
-        updateCartCount();
-
-        function updateCartCount() {
-            fetch("/cart/count")
-                .then(res => res.text())
-                .then(count => {
-                    const badge = document.getElementById("cart-count");
-                    if (badge) badge.textContent = count;
-                })
-                .catch(() => console.error("[cart] Không thể lấy số lượng giỏ hàng"));
-        }
 
         // khi click icon giỏ hàng trong header
         document.body.addEventListener("click", function(e) {
@@ -191,10 +176,97 @@
             }, 300);
         }
     });
+    // gọi khi trang load
+    function updateCartCount() {
+        fetch("/cart/count")
+            .then(res => res.text())
+            .then(count => {
+                // cập nhật tất cả các phần tử .cart-count-badge trên trang
+                document.querySelectorAll('.cart-count-badge').forEach(el => {
+                    // nếu server trả 0 và bạn muốn ẩn badge khi 0
+                    if (Number(count) <= 0) {
+                        el.classList.add('hidden');  // bạn đã có css .hidden
+                        el.textContent = 0;
+                    } else {
+                        el.classList.remove('hidden');
+                        el.textContent = count;
+                    }
+                });
+            })
+            .catch(err => console.error('[cart] Không thể lấy count', err));
+    }
+
+    // gọi khi DOM sẵn sàng
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCartCount();
+    });
+    document.addEventListener("DOMContentLoaded", function() {
+
+        function setupRowPagination(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            function attachPagination() {
+                container.querySelectorAll(".grid-pagination button").forEach(btn => {
+                    btn.onclick = function(e) {
+                        e.preventDefault();
+                        const url = this.getAttribute("data-url");
+                        if (!url) return;
+
+                        // slide out current
+                        container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                        container.style.transform = 'translateX(-100%)';
+                        container.style.opacity = 0;
+
+                        fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+                            .then(res => res.text())
+                            .then(html => {
+                                const tempDiv = document.createElement('div');
+                                tempDiv.innerHTML = html;
+
+                                // tìm đúng fragment mới trong response
+                                const newSection = tempDiv.querySelector('#' + containerId);
+                                if (newSection) {
+                                    setTimeout(() => {
+                                        container.innerHTML = newSection.innerHTML;
+
+                                        // slide in
+                                        container.style.transform = 'translateX(100%)';
+                                        container.style.opacity = 0;
+                                        requestAnimationFrame(() => {
+                                            container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                                            container.style.transform = 'translateX(0)';
+                                            container.style.opacity = 1;
+                                        });
+
+                                        // attach listener cho button mới
+                                        attachPagination();
+
+                                        // update URL để giữ lịch sử
+                                        history.pushState(null, '', url);
+                                    }, 300);
+                                }
+                            })
+                            .catch(err => console.error('AJAX pagination error:', err));
+                    };
+                });
+            }
+
+            attachPagination();
+        }
+
+        // gọi cho cả 3 row
+        setupRowPagination('product-grid-new');
+        setupRowPagination('product-grid-sale');
+        setupRowPagination('product-grid-hot');
+
+    });
 </script>
+
 
 <footer>
     <div th:replace="~{fragments/fragments :: footer}"></div>
 </footer>
+
 </body>
 </html>
