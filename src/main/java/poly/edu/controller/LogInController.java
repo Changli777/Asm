@@ -42,14 +42,6 @@ public class LogInController {
 
     @GetMapping("/login")
     public String showLoginPage(Model model) {
-        // ✅ KIỂM TRA: Nếu đã đăng nhập → redirect về home
-        User currentUser = (User) sessionService.get("currentUser");
-        if (currentUser != null) {
-            String referer = request.getHeader("Referer");
-            return "redirect:" + (referer != null ? referer : "/");
-        }
-
-        // Nếu chưa đăng nhập → hiển thị form login
         LoginForm loginForm = new LoginForm();
 
         // Nếu có cookie "user" (cookie lưu username) thì tiền điền username

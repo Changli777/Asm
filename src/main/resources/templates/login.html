@@ -163,6 +163,16 @@
         <div class="logo-subtitle">Chào mừng trở lại!</div>
     </div>
 
+    <!-- ✅ KIỂM TRA VÀ REDIRECT -->
+    <div th:if="${session.currentUser != null}">
+        <script>
+            window.location.replace('/home');
+        </script>
+        <div style="text-align: center; padding: 50px;">
+            <p>Đang chuyển hướng...</p>
+        </div>
+    </div>
+
     <!-- ✅ Nếu CHƯA đăng nhập -->
     <div th:if="${session.currentUser == null}">
         <h2 class="form-title">Đăng nhập</h2>
