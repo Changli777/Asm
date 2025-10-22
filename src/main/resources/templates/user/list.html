@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý người dùng</title>
+
+    <style>
+        /* body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 40px;
+            background-color: #f8f9fa;
+        } */
+
+         h2 {
+            color: #333;
+            text-align: center;
+        }
+
+        form {
+            margin: 20px auto;
+            width: 60%;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        input,
+        select {
+            padding: 8px;
+            width: 100%;
+            margin: 5px 0 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-edit {
+            background-color: #ffc107;
+        }
+
+        .btn-del {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius:8px;
+            overflow: hidden;
+            margin-top: 30px;
+        }
+
+         th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        a {
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+        } 
+    </style>
+
+</head>
+
+<body>
+    <!-- Header Fragment -->
+<div th:replace="~{fragments :: header}"></div>
+
+    <h2>QUẢN LÝ NGƯỜI DÙNG</h2>
+
+    <!-- Form thêm / sửa người dùng -->
+    <form th:action="@{/admin/users/save}" method="post" th:object="${user}">
+        <input type="hidden" th:field="*{userId}" />
+
+        <label>Tên đăng nhập:</label>
+        <input type="text" th:field="*{username}" placeholder="Nhập username" required />
+
+        <label>Email:</label>
+        <input type="email" th:field="*{email}" placeholder="Nhập email" required />
+
+        <label>Họ tên:</label>
+        <input type="text" th:field="*{fullName}" placeholder="Nhập họ tên" required />
+
+        <label>Giới tính:</label>
+        <select th:field="*{gender}">
+            <option th:value="false">Nam</option>
+            <option th:value="true">Nữ</option>
+        </select>
+
+        <label>Số điện thoại:</label>
+        <input type="text" th:field="*{phone}" placeholder="Nhập số điện thoại" />
+
+        <label>Địa chỉ:</label>
+        <input type="text" th:field="*{address}" placeholder="Nhập địa chỉ" />
+
+        <label>Vai trò:</label>
+        <select th:field="*{role}">
+            <option value="USER">USER</option>
+            <option value="ADMIN">ADMIN</option>
+        </select>
+
+        <button type="submit" class="btn-save">Lưu người dùng</button>
+    </form>
+
+    <!-- Bảng danh sách người dùng -->
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tên đăng nhập</th>
+                <th>Email</th>
+                <th>Họ tên</th>
+                <th>Giới tính</th>
+                <th>Điện thoại</th>
+                <th>Địa chỉ</th>
+                <th>Vai trò</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="u : ${users}">
+                <td th:text="${u.userId}"></td>
+                <td th:text="${u.username}"></td>
+                <td th:text="${u.email}"></td>
+                <td th:text="${u.fullName}"></td>
+                <td th:text="${u.gender} ? 'Nữ' : 'Nam'"></td>
+                <td th:text="${u.phone}"></td>
+                <td th:text="${u.address}"></td>
+                <td th:text="${u.role}"></td>
+                <td>
+                    <a th:href="@{'/admin/users/edit/' + ${u.userId}}" class="btn-edit">Sửa</a>
+                    <a th:href="@{'/admin/users/delete/' + ${u.userId}}" class="btn-del"
+                        onclick="return confirm('Bạn có chắc muốn xóa người dùng này?');">Xóa</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+
+</html>
