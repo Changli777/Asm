@@ -12,6 +12,7 @@ import poly.edu.dao.OrderDetailDAO;
 import poly.edu.dao.UserDAO;
 import poly.edu.entity.*;
 import poly.edu.service.CartItemService;
+import poly.edu.service.ProductService; // <-- THÊM IMPORT NÀY
 import poly.edu.service.SessionService;
 
 import java.math.BigDecimal;
@@ -25,6 +26,9 @@ public class CartController {
 
     @Autowired
     private CartItemService cartItemService;
+
+    @Autowired
+    private ProductService productService; // <-- THÊM AUTOWIRED NÀY
 
     @Autowired
     private SessionService sessionService;
@@ -247,8 +251,9 @@ public class CartController {
         // ✅ LƯU ORDER TRƯỚC (để có orderId)
         orderDao.save(order);
 
-        // ✅ LƯU CHI TIẾT ĐƠN HÀNG
+        // ✅ LƯU CHI TIẾT ĐƠN HÀNG VÀ CẬP NHẬT SẢN PHẨM (ĐÃ SỬA)
         for (CartItem item : cartItems) {
+            // 1. Lưu OrderDetail
             OrderDetail detail = new OrderDetail();
             detail.setOrder(order);
             detail.setProduct(item.getProduct());
@@ -262,6 +267,20 @@ public class CartController {
             detail.setSubtotal(subtotal);
 
             detailDao.save(detail);
+
+            // 2. CẬP NHẬT SOLD COUNT VÀ TỒN KHO TRONG BẢNG PRODUCT
+            Product product = item.getProduct();
+
+            // Tăng soldCount (kiểm tra null an toàn)
+            product.setSoldCount(
+                    product.getSoldCount() == null ? item.getQuantity() : product.getSoldCount() + item.getQuantity()
+            );
+
+            // Giảm StockQuantity
+            product.setStockQuantity(product.getStockQuantity() - item.getQuantity());
+
+            // Lưu Product đã cập nhật
+            productService.update(product);
         }
 
         // Xóa giỏ hàng sau khi đặt
@@ -271,4 +290,3 @@ public class CartController {
         return "redirect:/home";
     }
 }
-
