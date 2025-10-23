@@ -26,17 +26,11 @@ public class PasswordResetService {
     @Autowired
     private MailerService mailerService;
 
-    // Nh? d?a vào b??c 1 dã t?o PasswordEncoderConfig
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
 
     private String generateOtp() {
         return String.format("%06d", new Random().nextInt(999999));
     }
 
-    /**
-     * T?o và G?i OTP.
-     */
     public Optional<User> createAndSendOtp(String email) {
         Optional<User> optionalUser = userDAO.findByEmail(email);
 
@@ -60,9 +54,6 @@ public class PasswordResetService {
         return Optional.empty();
     }
 
-    /**
-     * Xác th?c mã OTP.
-     */
     public boolean validateOtp(User user, String otpCode) {
         Optional<PasswordResetToken> tokenOpt = tokenDAO.findByUserAndTokenCodeAndExpiryDateAfterAndIsUsed(
                 user, otpCode, LocalDateTime.now(), false
@@ -82,9 +73,7 @@ public class PasswordResetService {
             throw new IllegalArgumentException("Mã OTP không hợp lệ, hoặc đã hết hạn !");
         }
 
-        // Mã hóa m?t kh?u m?i
-        String hashedPassword = passwordEncoder.encode(newPassword);
-        user.setPassword(hashedPassword);
+        user.setPassword(newPassword);
         userDAO.save(user);
 
         // Dánh d?u token là dã s? d?ng
