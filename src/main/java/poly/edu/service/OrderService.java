@@ -1,11 +1,11 @@
 package poly.edu.service;
 
-import org.springframework.stereotype.Service;
-import poly.edu.entity.*;
-import java.util.Optional;
-import java.util.List;
+import poly.edu.entity.Order;
+import poly.edu.entity.User;
 
-@Service
+import java.util.List;
+import java.util.Optional;
+
 public interface OrderService {
 
     List<Order> findAll();
@@ -26,4 +26,10 @@ public interface OrderService {
     void markDelivered(Order order);             // Shipping -> Delivered
     void adminConfirmPayment(Order order);       // Delivered -> Admin xác nhận
     void customerConfirmPayment(Order order);
+}
+    List<Order> findByStatusAndUser(String status, User user, String sort);
+    Optional<Order> findByOrderIdAndUser(Long orderId, User user);
+    boolean cancelOrder(Long orderId, User user, String reason);
+    Order save(Order order);
+    Optional<Order> findByOrderNumber(String orderNumber);
 }

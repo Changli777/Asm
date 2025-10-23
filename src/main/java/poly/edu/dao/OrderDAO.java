@@ -13,16 +13,14 @@ import java.util.Optional;
 @Repository
 public interface OrderDAO extends JpaRepository<Order, Long> {
 
-    List<Order> findByStatus(String status);
-
-    // Tìm đơn hàng theo status và user, sắp xếp theo ngày tạo
     List<Order> findByStatusAndUserOrderByCreatedAtDesc(String status, User user);
     List<Order> findByStatusAndUserOrderByCreatedAtAsc(String status, User user);
 
-    // Tìm theo orderId và user (để bảo mật, user chỉ xem được đơn của mình)
+    List<Order> findByUserOrderByCreatedAtDesc(User user);
+    List<Order> findByUserOrderByCreatedAtAsc(User user);
+
     Optional<Order> findByOrderIdAndUser(Long orderId, User user);
 
-    // Tìm theo orderNumber
     Optional<Order> findByOrderNumber(String orderNumber);
 
     // lấy tất cả (no username filter) sắp xếp
