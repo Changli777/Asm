@@ -1,8 +1,7 @@
 package poly.edu.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -12,6 +11,9 @@ import java.util.List;
 @Entity
 @Table(name = "orders")
 @Data
+@Getter
+@Setter
+@AllArgsConstructor
 @NoArgsConstructor
 public class Order {
     @Id
@@ -44,10 +46,10 @@ public class Order {
     @Column(name = "shipping_full_name", nullable = false, length = 100)
     private String shippingFullName;
 
-    @Column(name = "shipping_phone", nullable = false, length = 20)
+    @Column(name = "shipping_phone", length = 20)
     private String shippingPhone;
 
-    @Column(name = "shipping_address", nullable = false, length = 500)
+    @Column(name = "shipping_address" , length = 500)
     private String shippingAddress;
 
     @Column(name = "shipping_notes", length = 500)
@@ -96,6 +98,9 @@ public class Order {
     // Thêm trường transient cho chuỗi tổng tiền đã format
     @Transient
     private String formattedTotalAmount;
+
+    public boolean isAdminConfirmed() { return adminConfirmed; }
+    public boolean isCustomerConfirmed() { return customerConfirmed; }
 
     @PrePersist
     public void prePersist() {
