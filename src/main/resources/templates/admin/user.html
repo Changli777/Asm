@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quản lý User</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css" />
+  <style>
+    /* ---------- Reset / base giống home.html ---------- */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; color: #222; }
+    a { color: #0d6efd; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ---------- Container rộng hơn (dùng không gian) ---------- */
+    .container {
+      max-width: 1500px;    /* tăng rộng để tận dụng không gian */
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* ---------- Layout chung ---------- */
+    .form-card, .table-container {
+      background: #fff;
+      border-radius: 10px;
+      padding: 22px;
+      box-shadow: 0 6px 18px rgba(25, 25, 25, 0.06);
+    }
+
+    .form-card h5 {
+      margin-bottom: 12px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #111;
+    }
+
+    /* ---------- Search bar (căn giữa) ---------- */
+    .search-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .search-wrapper .search-input {
+      width: 640px
+      max-width: calc(100% - 220px);
+      min-width: 280px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #e3e6ea;
+      font-size: 0.98rem;
+      box-shadow: none;
+    }
+    .search-wrapper .search-actions { display:flex; gap:8px; align-items:center; }
+
+    /* ---------- Form layout: grid ngang, không dọc chồng chồng ---------- */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr); /* default 2 cột */
+      gap: 14px 18px;
+      align-items: start;
+    }
+
+    /* trên màn hình lớn, 3 cột để tận dụng chiều ngang */
+    @media (min-width: 1200px) {
+      .form-grid { grid-template-columns: repeat(3, 1fr); gap: 16px 20px; }
+    }
+
+    /* Các trường span toàn hàng khi cần */
+    .form-grid .full-row { grid-column: 1 / -1; }
+
+    /* Các control */
+    .form-card label { display: block; margin-bottom: 6px; font-size: .92rem; color: #444; }
+    .form-card input[type="text"],
+    .form-card input[type="email"],
+    .form-card input[type="password"],
+    .form-card input[type="date"],
+    .form-card textarea,
+    .form-card select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e3e6ea;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 0.95rem;
+      color: #222;
+      transition: box-shadow .14s ease, border-color .14s ease;
+    }
+    .form-card textarea { min-height: 90px; resize: vertical; }
+    .form-card input:focus,
+    .form-card textarea:focus,
+    .form-card select:focus {
+      outline: none;
+      border-color: #bcd0ff;
+      box-shadow: 0 6px 18px rgba(13,110,253,0.06);
+    }
+
+    .small-muted { font-size: .84rem; color: #6c757d; margin-top:4px; }
+
+    /* ---------- Buttons (đồng bộ) ---------- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      font-size: .95rem;
+      cursor: pointer;
+      transition: transform .06s ease, box-shadow .12s ease;
+    }
+    .btn:active { transform: translateY(1px); }
+
+    .btn-primary {
+      background: linear-gradient(180deg,#0d6efd,#0b5ed7);
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(13,110,253,0.14);
+      border-color: rgba(0,0,0,0.03);
+    }
+    .btn-success {
+      background: linear-gradient(180deg,#37b24d,#2f9e44);
+      color: #fff;
+      border-color: rgba(0,0,0,0.03);
+    }
+    .btn-secondary {
+      background: #f1f3f5;
+      color: #212529;
+      border: 1px solid #e6e9ee;
+    }
+    .btn-outline-primary {
+      background: transparent;
+      color: #0d6efd;
+      border: 1px solid #0d6efd;
+    }
+    .btn-outline-danger {
+      background: transparent;
+      color: #dc3545;
+      border: 1px solid #dc3545;
+    }
+    .btn-sm { padding: 6px 8px; font-size: .85rem; border-radius: 6px; }
+
+    /* Align action buttons for the form */
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-start;
+      margin-top: 12px;
+    }
+
+    /* ---------- Table area: chiếm toàn chiều ngang, to rộng hơn ---------- */
+    .table-container {
+      margin-top: 20px;
+      padding: 20px;
+    }
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+    }
+    table {
+      width: 1200px; /* cố định bề ngang table lớn hơn container để hiển thị nhiều cột */
+      max-width: 100%;
+      border-collapse: collapse;
+      font-size: 0.96rem;
+    }
+    thead tr {
+      background: linear-gradient(180deg,#fafbfc,#f3f6fb);
+      color: #333;
+      text-transform: uppercase;
+      font-size: .78rem;
+      letter-spacing: .02em;
+    }
+    thead th { padding: 12px 14px; text-align: left; border-bottom: 1px solid #eef1f6; white-space: nowrap; }
+    tbody td { padding: 12px 14px; border-bottom: 1px solid #f1f3f7; vertical-align: middle; color: #333; white-space: nowrap; }
+    tbody tr:hover { background: rgba(13,110,253,0.02); }
+
+    /* Make action column sticky at right on wide screens (nice UX) */
+    @media (min-width: 900px) {
+      .action-col { position: sticky; right: 0; background: #fff; }
+    }
+
+    /* ---------- Responsive: form horizontal -> stack on small screens ---------- */
+    @media (max-width: 1199px) {
+      .form-grid { grid-template-columns: repeat(2, 1fr); }
+      table { width: 100%; }
+    }
+    @media (max-width: 768px) {
+      .search-wrapper .search-input { width: 100%; max-width: 100%; }
+      .form-grid { grid-template-columns: 1fr; gap: 12px; }
+      .form-actions { justify-content: space-between; }
+    }
+
+    /* ---------- Helpers / spacing ---------- */
+    .mb-2 { margin-bottom: 10px; }
+    .mt-3 { margin-top: 14px; }
+    .mt-4 { margin-top: 18px; }
+    .mb-3 { margin-bottom: 14px; }
+    .hidden { display: none !important; }
+    form[onsubmit] { display: inline-block; margin: 0; padding: 0; }
+
+    /* ---------- Small visual polish ---------- */
+    .section-title {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .muted-note { color:#6c757d; font-size:.9rem; }
+
+  </style>
+
+
+</head>
+<body>
+<!-- Header fragment -->
+<div th:replace="~{fragments/fragments :: header}"></div>
+
+<div class="container mt-4">
+  <!-- Search bar -->
+  <form class="mb-3" th:action="@{/admin/user}" method="get">
+    <div class="input-group">
+      <input class="form-control" type="text" name="q" placeholder="Tìm theo username, email hoặc phone" th:value="${searchQuery}">
+      <button class="btn btn-outline-secondary" type="submit">Tìm</button>
+      <a class="btn btn-outline-secondary" th:href="@{/admin/user}">Clear</a>
+    </div>
+  </form>
+
+  <div class="row">
+    <!-- FORM -->
+    <div class="col-md-5">
+      <div class="form-card">
+        <h5 th:text="${userForm.userId != null} ? 'Chỉnh sửa user' : 'Tạo user mới'"></h5>
+
+        <!-- Save form (POST) -->
+        <form th:action="@{/admin/user/save/{id}(id=${userForm.userId != null ? userForm.userId : 0})}"
+              th:object="${userForm}"
+              method="post" autocomplete="off">
+
+          <!-- userid (readonly) -->
+          <div class="mb-2">
+            <label class="form-label">UserID</label>
+            <input class="form-control" type="text" th:field="*{userId}" readonly />
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">Username</label>
+            <input class="form-control" type="text" th:field="*{username}" required />
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">Email</label>
+            <input class="form-control" type="email" th:field="*{email}" required />
+          </div>
+
+          <!-- rawPassword: dùng để set password mới; khi update để trống -> giữ nguyên -->
+          <div class="mb-2">
+            <label class="form-label">Password (để trống nếu không đổi)</label>
+            <input class="form-control" type="password" name="rawPassword" />
+            <div class="small-muted">Khi tạo user mới, hãy nhập mật khẩu ở đây.</div>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">Full name</label>
+            <input class="form-control" type="text" th:field="*{fullName}" required />
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">Gender</label>
+            <select class="form-select" th:field="*{gender}">
+              <option th:value="${null}" th:text="'--Chọn--'"></option>
+              <option th:value="true" th:text="'Male'"></option>
+              <option th:value="false" th:text="'Female'"></option>
+            </select>
+            <div class="small-muted">true = Male, false = Female, null = Khác/Chưa chọn</div>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">Date of birth</label>
+            <input class="form-control" type="date" th:field="*{dateOfBirth}" />
+            <div class="small-muted">Định dạng ngày: yyyy-mm-dd (input date chuẩn)</div>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">Phone</label>
+            <input class="form-control" type="text" th:field="*{phone}" required />
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">Address</label>
+            <textarea class="form-control" th:field="*{address}"></textarea>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">Role</label>
+            <select class="form-select" th:field="*{role}">
+              <option value="">--Chọn--</option>
+              <option value="ADMIN" th:selected="${userForm.role == 'ADMIN'}">ADMIN</option>
+              <option value="USER" th:selected="${userForm.role == 'USER'}">USER</option>
+            </select>
+          </div>
+
+          <!-- Optional provider/providerId if needed -->
+          <div class="mb-2" th:if="${userForm.provider != null}">
+            <label class="form-label">Provider</label>
+            <input class="form-control" type="text" th:field="*{provider}" />
+          </div>
+
+          <div class="actions mt-3">
+            <button type="submit" class="btn btn-primary">Lưu</button>
+
+            <!-- Create (blank form) -->
+            <a th:href="@{/admin/user/create}" class="btn btn-success">Tạo</a>
+
+            <button type="reset" class="btn btn-secondary">Reset</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="col-md-7">
+      <div class="table-container">
+        <table class="table table-striped table-hover">
+          <thead>
+          <tr>
+            <th>UserID</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Fullname</th>
+            <th>Gender</th>
+            <th>DOB</th>
+            <th>Phone</th>
+            <th>Address</th>
+            <th>Role</th>
+            <th style="width:130px">Action</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:each="u : ${users}">
+            <td th:text="${u.userId}"></td>
+            <td th:text="${u.username}"></td>
+            <td th:text="${u.email}"></td>
+            <td th:text="${u.fullName}"></td>
+            <td th:text="${u.gender == null ? 'Khác' : (u.gender ? 'Male' : 'Female')}"></td>
+            <td th:text="${u.dateOfBirth}"></td>
+            <td th:text="${u.phone}"></td>
+            <td th:text="${u.address}"></td>
+            <td th:text="${u.role}"></td>
+            <td>
+              <!-- Edit: dùng create?id=... -->
+              <a th:href="@{/admin/user/create(id=${u.userId})}" class="btn btn-sm btn-outline-primary">Edit</a>
+
+              <!-- Delete: POST form (không dùng Spring Security CSRF token) -->
+              <form th:action="@{/admin/user/delete/{id}(id=${u.userId})}" method="post" th:object="${u}"
+                    style="display:inline-block" onsubmit="return confirm('Xác nhận xóa user này?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+              </form>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(users)}">
+            <td colspan="10" class="text-center small-muted">Không có user nào</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div th:if="${msg}">
+  <script th:inline="javascript">
+    Swal.fire({
+      icon: 'success',
+      title: 'Thành công!',
+      text: [[${msg}]],
+      showConfirmButton: false,
+      timer: 1800
+    });
+  </script>
+</div>
+
+<div th:if="${error}">
+  <script th:inline="javascript">
+    Swal.fire({
+      icon: 'error',
+      title: 'Thất bại!',
+      text: [[${error}]],
+      showConfirmButton: true
+    });
+  </script>
+</div>
+</div>
+
+<!-- Overlay & panel -->
+<div id="cart-overlay" class="hidden"></div>
+<div id="cart-panel" class="hidden"></div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    console.log("[cart] Ready");
+
+    const overlay = document.getElementById("cart-overlay");
+    const panel = document.getElementById("cart-panel");
+
+    // khi click icon giỏ hàng trong header
+    document.body.addEventListener("click", function(e) {
+      const icon = e.target.closest(".cart-icon-header");
+      if (!icon) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      console.log("[cart] Icon clicked, loading fragment...");
+
+      fetch("/cart")
+              .then(res => res.text())
+              .then(html => {
+                panel.innerHTML = html;
+                overlay.classList.remove("hidden");
+                panel.classList.remove("hidden");
+                requestAnimationFrame(() => {
+                  overlay.classList.add("show");
+                  panel.classList.add("show");
+                });
+              })
+              .catch(err => console.error("[cart] Lỗi khi load fragment:", err));
+    });
+
+    // đóng khi click ra ngoài
+    overlay.addEventListener("click", closeCart);
+
+    // đóng khi bấm nút X
+    panel.addEventListener("click", e => {
+      if (e.target.classList.contains("cart-close-btn") || e.target.classList.contains("close-cart")) {
+        closeCart();
+      }
+    });
+
+    // ESC để đóng
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeCart();
+    });
+
+    function closeCart() {
+      overlay.classList.remove("show");
+      panel.classList.remove("show");
+      setTimeout(() => {
+        overlay.classList.add("hidden");
+        panel.classList.add("hidden");
+      }, 300);
+    }
+  });
+  // gọi khi trang load
+  function updateCartCount() {
+    fetch("/cart/count")
+            .then(res => res.text())
+            .then(count => {
+              // cập nhật tất cả các phần tử .cart-count-badge trên trang
+              document.querySelectorAll('.cart-count-badge').forEach(el => {
+                // nếu server trả 0 và bạn muốn ẩn badge khi 0
+                if (Number(count) <= 0) {
+                  el.classList.add('hidden');  // bạn đã có css .hidden
+                  el.textContent = 0;
+                } else {
+                  el.classList.remove('hidden');
+                  el.textContent = count;
+                }
+              });
+            })
+            .catch(err => console.error('[cart] Không thể lấy count', err));
+  }
+
+  // gọi khi DOM sẵn sàng
+  document.addEventListener('DOMContentLoaded', function() {
+    updateCartCount();
+  });
+  document.addEventListener("DOMContentLoaded", function() {
+
+    function setupRowPagination(containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      function attachPagination() {
+        container.querySelectorAll(".grid-pagination button").forEach(btn => {
+          btn.onclick = function(e) {
+            e.preventDefault();
+            const url = this.getAttribute("data-url");
+            if (!url) return;
+
+            // slide out current
+            container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+            container.style.transform = 'translateX(-100%)';
+            container.style.opacity = 0;
+
+            fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+                    .then(res => res.text())
+                    .then(html => {
+                      const tempDiv = document.createElement('div');
+                      tempDiv.innerHTML = html;
+
+                      // tìm đúng fragment mới trong response
+                      const newSection = tempDiv.querySelector('#' + containerId);
+                      if (newSection) {
+                        setTimeout(() => {
+                          container.innerHTML = newSection.innerHTML;
+
+                          // slide in
+                          container.style.transform = 'translateX(100%)';
+                          container.style.opacity = 0;
+                          requestAnimationFrame(() => {
+                            container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                            container.style.transform = 'translateX(0)';
+                            container.style.opacity = 1;
+                          });
+
+                          // attach listener cho button mới
+                          attachPagination();
+
+                          // update URL để giữ lịch sử
+                          history.pushState(null, '', url);
+                        }, 300);
+                      }
+                    })
+                    .catch(err => console.error('AJAX pagination error:', err));
+          };
+        });
+      }
+
+      attachPagination();
+    }
+
+    // gọi cho cả 3 row
+    setupRowPagination('product-grid-new');
+    setupRowPagination('product-grid-sale');
+    setupRowPagination('product-grid-hot');
+
+  });
+</script>
+
+
+<footer>
+  <div th:replace="~{fragments/fragments :: footer}"></div>
+</footer>
+
+<script src="/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

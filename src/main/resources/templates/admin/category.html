@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý loại hàng - Shopii</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; color: #222; }
+    a { color: #0d6efd; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container { max-width: 1500px; margin: 0 auto; padding: 24px; }
+    .form-card, .table-container {
+      background: #fff;
+      border-radius: 10px;
+      padding: 22px;
+      box-shadow: 0 6px 18px rgba(25, 25, 25, 0.06);
+    }
+    .form-card h5 { margin-bottom: 12px; font-size: 1.05rem; font-weight: 600; color: #111; }
+
+    .form-control { width: 100%; padding: 10px 12px; border: 1px solid #e3e6ea; border-radius: 8px; font-size: 0.95rem; color: #222; }
+    .form-control:focus { outline: none; border-color: #bcd0ff; box-shadow: 0 6px 18px rgba(13,110,253,0.06); }
+
+    .mb-2 { margin-bottom: 10px; }
+    .mt-3 { margin-top: 14px; }
+    .form-actions { display: flex; gap: 10px; align-items: center; justify-content: flex-start; margin-top: 12px; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 12px; border-radius: 8px; border: 1px solid transparent; font-size: .95rem; cursor: pointer; transition: transform .06s ease, box-shadow .12s ease; }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary { background: linear-gradient(180deg,#0d6efd,#0b5ed7); color: #fff; box-shadow: 0 6px 16px rgba(13,110,253,0.14); border-color: rgba(0,0,0,0.03); }
+    .btn-success { background: linear-gradient(180deg,#37b24d,#2f9e44); color: #fff; border-color: rgba(0,0,0,0.03); }
+    .btn-secondary { background: #f1f3f5; color: #212529; border: 1px solid #e6e9ee; }
+    .btn-outline-primary { background: transparent; color: #0d6efd; border: 1px solid #0d6efd; }
+    .btn-outline-danger { background: transparent; color: #dc3545; border: 1px solid #dc3545; }
+    .btn-sm { padding: 6px 8px; font-size: .85rem; border-radius: 6px; }
+
+    .table-container { margin-top: 20px; padding: 20px; }
+    .table-responsive { width: 100%; overflow-x: auto; }
+    table { width: 1200px; max-width: 100%; border-collapse: collapse; font-size: 0.96rem; }
+    thead tr { background: linear-gradient(180deg,#fafbfc,#f3f6fb); color: #333; text-transform: uppercase; font-size: .78rem; letter-spacing: .02em; }
+    thead th { padding: 12px 14px; text-align: left; border-bottom: 1px solid #eef1f6; white-space: nowrap; }
+    tbody td { padding: 12px 14px; border-bottom: 1px solid #f1f3f7; vertical-align: middle; color: #333; white-space: nowrap; }
+    tbody tr:hover { background: rgba(13,110,253,0.02); }
+
+    @media (max-width: 1199px) { table { width: 100%; } }
+    @media (max-width: 768px) { .form-actions { justify-content: space-between; } }
+
+    .small-muted { font-size: .84rem; color: #6c757d; margin-top:4px; }
+  </style>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      flex: 1;
+    }
+
+    footer {
+      margin-top: auto;
+    }
+
+    /* ========== CART OVERLAY + PANEL ========== */
+    #cart-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 1200;
+    }
+    #cart-overlay.hidden {
+      display: none;
+    }
+    #cart-overlay.show {
+      opacity: 1;
+    }
+    #cart-panel {
+      position: fixed;
+      top: 0;
+      right: -420px;
+      width: 400px;
+      height: 100%;
+      background: #fff;
+      box-shadow: -5px 0 15px rgba(0,0,0,0.25);
+      overflow-y: auto;
+      transition: right 0.3s ease;
+      z-index: 1250;
+      padding: 20px;
+    }
+    #cart-panel.hidden {
+      display: none;
+    }
+    #cart-panel.show {
+      right: 0;
+    }
+    .cart-close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: transparent;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div th:replace="~{fragments/fragments :: header}"></div>
+
+<div class="container mt-4">
+
+
+  <!-- Search bar -->
+  <form class="mb-3" th:action="@{/admin/categories}" method="get">
+    <div class="input-group">
+      <input class="form-control" type="text" name="q" placeholder="Tìm theo tên loại hàng..." th:value="${searchQuery}">
+      <button class="btn btn-outline-secondary" type="submit">Tìm</button>
+      <a class="btn btn-outline-secondary" th:href="@{/admin/categories}">Clear</a>
+    </div>
+  </form>
+
+  <div class="row">
+    <!-- FORM -->
+    <div class="col-md-5">
+      <div class="form-card">
+        <h5 th:text="${categoryForm.categoryId != null} ? 'Chỉnh sửa loại hàng' : 'Tạo loại hàng mới'"></h5>
+
+        <form th:action="@{/admin/categories/save}" th:object="${categoryForm}" method="post">
+          <input type="hidden" th:field="*{categoryId}">
+
+          <div class="mb-2">
+            <label>Tên loại hàng</label>
+            <input class="form-control" type="text" th:field="*{categoryName}" required>
+          </div>
+
+          <div class="mb-2">
+            <label>Mô tả</label>
+            <textarea class="form-control" th:field="*{description}"></textarea>
+          </div>
+
+          <div class="form-actions mt-3">
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <a th:href="@{/admin/categories/create}" class="btn btn-success">Reset</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="col-md-7">
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tên loại hàng</th>
+              <th>Mô tả</th>
+              <th style="width:130px">Hành động</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="cat : ${categories}">
+              <td th:text="${cat.categoryId}"></td>
+              <td th:text="${cat.categoryName}"></td>
+              <td th:text="${cat.description}"></td>
+              <td>
+                <a th:href="@{/admin/categories/create(id=${cat.categoryId})}" class="btn btn-sm btn-outline-primary">Sửa</a>
+                <form th:action="@{/admin/categories/delete/{id}(id=${cat.categoryId})}" method="post" style="display:inline-block" onsubmit="return confirm('Xóa loại hàng này?');">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                </form>
+              </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(categories)}">
+              <td colspan="4" class="text-center small-muted">Không có loại hàng nào</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <div th:if="${msg}">
+    <script th:inline="javascript">
+      Swal.fire({
+        icon: 'success',
+        title: 'Thành công!',
+        text: [[${msg}]],
+        showConfirmButton: false,
+        timer: 1800
+      });
+    </script>
+  </div>
+
+  <div th:if="${error}">
+    <script th:inline="javascript">
+      Swal.fire({
+        icon: 'error',
+        title: 'Thất bại!',
+        text: [[${error}]],
+        showConfirmButton: true
+      });
+    </script>
+  </div>
+</div>
+
+<!-- Overlay & panel -->
+<div id="cart-overlay" class="hidden"></div>
+<div id="cart-panel" class="hidden"></div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    console.log("[cart] Ready");
+
+    const overlay = document.getElementById("cart-overlay");
+    const panel = document.getElementById("cart-panel");
+
+    // khi click icon giỏ hàng trong header
+    document.body.addEventListener("click", function(e) {
+      const icon = e.target.closest(".cart-icon-header");
+      if (!icon) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      console.log("[cart] Icon clicked, loading fragment...");
+
+      fetch("/cart")
+              .then(res => res.text())
+              .then(html => {
+                panel.innerHTML = html;
+                overlay.classList.remove("hidden");
+                panel.classList.remove("hidden");
+                requestAnimationFrame(() => {
+                  overlay.classList.add("show");
+                  panel.classList.add("show");
+                });
+              })
+              .catch(err => console.error("[cart] Lỗi khi load fragment:", err));
+    });
+
+    // đóng khi click ra ngoài
+    overlay.addEventListener("click", closeCart);
+
+    // đóng khi bấm nút X
+    panel.addEventListener("click", e => {
+      if (e.target.classList.contains("cart-close-btn") || e.target.classList.contains("close-cart")) {
+        closeCart();
+      }
+    });
+
+    // ESC để đóng
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeCart();
+    });
+
+    function closeCart() {
+      overlay.classList.remove("show");
+      panel.classList.remove("show");
+      setTimeout(() => {
+        overlay.classList.add("hidden");
+        panel.classList.add("hidden");
+      }, 300);
+    }
+  });
+  // gọi khi trang load
+  function updateCartCount() {
+    fetch("/cart/count")
+            .then(res => res.text())
+            .then(count => {
+              // cập nhật tất cả các phần tử .cart-count-badge trên trang
+              document.querySelectorAll('.cart-count-badge').forEach(el => {
+                // nếu server trả 0 và bạn muốn ẩn badge khi 0
+                if (Number(count) <= 0) {
+                  el.classList.add('hidden');  // bạn đã có css .hidden
+                  el.textContent = 0;
+                } else {
+                  el.classList.remove('hidden');
+                  el.textContent = count;
+                }
+              });
+            })
+            .catch(err => console.error('[cart] Không thể lấy count', err));
+  }
+
+  // gọi khi DOM sẵn sàng
+  document.addEventListener('DOMContentLoaded', function() {
+    updateCartCount();
+  });
+  document.addEventListener("DOMContentLoaded", function() {
+
+    function setupRowPagination(containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      function attachPagination() {
+        container.querySelectorAll(".grid-pagination button").forEach(btn => {
+          btn.onclick = function(e) {
+            e.preventDefault();
+            const url = this.getAttribute("data-url");
+            if (!url) return;
+
+            // slide out current
+            container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+            container.style.transform = 'translateX(-100%)';
+            container.style.opacity = 0;
+
+            fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+                    .then(res => res.text())
+                    .then(html => {
+                      const tempDiv = document.createElement('div');
+                      tempDiv.innerHTML = html;
+
+                      // tìm đúng fragment mới trong response
+                      const newSection = tempDiv.querySelector('#' + containerId);
+                      if (newSection) {
+                        setTimeout(() => {
+                          container.innerHTML = newSection.innerHTML;
+
+                          // slide in
+                          container.style.transform = 'translateX(100%)';
+                          container.style.opacity = 0;
+                          requestAnimationFrame(() => {
+                            container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                            container.style.transform = 'translateX(0)';
+                            container.style.opacity = 1;
+                          });
+
+                          // attach listener cho button mới
+                          attachPagination();
+
+                          // update URL để giữ lịch sử
+                          history.pushState(null, '', url);
+                        }, 300);
+                      }
+                    })
+                    .catch(err => console.error('AJAX pagination error:', err));
+          };
+        });
+      }
+
+      attachPagination();
+    }
+
+    // gọi cho cả 3 row
+    setupRowPagination('product-grid-new');
+    setupRowPagination('product-grid-sale');
+    setupRowPagination('product-grid-hot');
+
+  });
+</script>
+
+
+<footer>
+  <div th:replace="~{fragments/fragments :: footer}"></div>
+</footer>
+
+<script src="/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

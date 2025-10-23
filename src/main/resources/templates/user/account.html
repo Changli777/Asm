@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Thông tin cá nhân - Shopii</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; color: #222; }
+    a { color: #0d6efd; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container { max-width: 1200px; margin: 50px auto; padding: 24px; }
+
+    .account-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 22px;
+      box-shadow: 0 6px 18px rgba(25, 25, 25, 0.06);
+    }
+
+    .account-card h2 {
+      margin-bottom: 20px;
+      color: #111;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .account-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    .account-table th, .account-table td {
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1px solid #f1f3f7;
+      color: #333;
+      white-space: nowrap;
+    }
+
+    .account-table th {
+      width: 220px;
+      font-weight: 500;
+      color: #555;
+    }
+
+    .account-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      font-size: .95rem;
+      cursor: pointer;
+      transition: transform .06s ease, box-shadow .12s ease;
+      text-decoration: none;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary { background: linear-gradient(180deg,#0d6efd,#0b5ed7); color: #fff; box-shadow: 0 6px 16px rgba(13,110,253,0.14); border-color: rgba(0,0,0,0.03); }
+    .btn-success { background: linear-gradient(180deg,#37b24d,#2f9e44); color: #fff; border-color: rgba(0,0,0,0.03); }
+  </style>
+</head>
+<body>
+<!-- Header -->
+<div th:replace="~{fragments/fragments :: header}"></div>
+
+<div class="container">
+  <div class="account-card">
+    <h2>Thông tin cá nhân</h2>
+
+    <table class="account-table">
+      <tr>
+        <th>ID người dùng:</th>
+        <td th:text="${user.userId}">1</td>
+      </tr>
+      <tr>
+        <th>Họ và tên:</th>
+        <td th:text="${user.fullName}">Nguyen Van A</td>
+      </tr>
+      <tr>
+        <th>Tên đăng nhập:</th>
+        <td th:text="${user.username}">user123</td>
+      </tr>
+      <tr>
+        <th>Email:</th>
+        <td th:text="${user.email}">user@example.com</td>
+      </tr>
+      <tr>
+        <th>Giới tính:</th>
+        <td th:text="${user.gender} ? 'Nam' : 'Nữ'">Nam</td>
+      </tr>
+      <tr>
+        <th>Ngày sinh:</th>
+        <td th:text="${user.dateOfBirth != null} ? ${#temporals.format(user.dateOfBirth, 'dd/MM/yyyy')} : 'Chưa cập nhật'">01/01/2000</td>
+      </tr>
+      <tr>
+        <th>Số điện thoại:</th>
+        <td th:text="${user.phone}">0123456789</td>
+      </tr>
+      <tr>
+        <th>Địa chỉ:</th>
+        <td th:text="${user.address != null} ? ${user.address} : 'Chưa cập nhật'">Hà Nội</td>
+      </tr>
+      <tr>
+        <th>Vai trò:</th>
+        <td th:text="${user.role}">USER</td>
+      </tr>
+      <tr>
+        <th>Provider:</th>
+        <td th:text="${user.provider}">LOCAL</td>
+      </tr>
+      <tr>
+        <th>Provider ID:</th>
+        <td th:text="${user.providerId != null} ? ${user.providerId} : 'Chưa có'">null</td>
+      </tr>
+      <tr>
+        <th>Ngày tạo:</th>
+        <td th:text="${#temporals.format(user.createdAt,'dd/MM/yyyy HH:mm:ss')}">22/10/2025 15:00:00</td>
+      </tr>
+      <tr>
+        <th>Ngày cập nhật:</th>
+        <td th:text="${#temporals.format(user.updatedAt,'dd/MM/yyyy HH:mm:ss')}">22/10/2025 16:00:00</td>
+      </tr>
+    </table>
+
+    <div class="account-actions">
+      <a th:href="@{/account/change-password}" class="btn btn-primary">Đổi mật khẩu</a>
+      <a th:href="@{/account/edit}" class="btn btn-success">Chỉnh sửa thông tin</a>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay & panel -->
+<div id="cart-overlay" class="hidden"></div>
+<div id="cart-panel" class="hidden"></div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    console.log("[cart] Ready");
+
+    const overlay = document.getElementById("cart-overlay");
+    const panel = document.getElementById("cart-panel");
+
+    // khi click icon giỏ hàng trong header
+    document.body.addEventListener("click", function(e) {
+      const icon = e.target.closest(".cart-icon-header");
+      if (!icon) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      console.log("[cart] Icon clicked, loading fragment...");
+
+      fetch("/cart")
+              .then(res => res.text())
+              .then(html => {
+                panel.innerHTML = html;
+                overlay.classList.remove("hidden");
+                panel.classList.remove("hidden");
+                requestAnimationFrame(() => {
+                  overlay.classList.add("show");
+                  panel.classList.add("show");
+                });
+              })
+              .catch(err => console.error("[cart] Lỗi khi load fragment:", err));
+    });
+
+    // đóng khi click ra ngoài
+    overlay.addEventListener("click", closeCart);
+
+    // đóng khi bấm nút X
+    panel.addEventListener("click", e => {
+      if (e.target.classList.contains("cart-close-btn") || e.target.classList.contains("close-cart")) {
+        closeCart();
+      }
+    });
+
+    // ESC để đóng
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeCart();
+    });
+
+    function closeCart() {
+      overlay.classList.remove("show");
+      panel.classList.remove("show");
+      setTimeout(() => {
+        overlay.classList.add("hidden");
+        panel.classList.add("hidden");
+      }, 300);
+    }
+  });
+  // gọi khi trang load
+  function updateCartCount() {
+    fetch("/cart/count")
+            .then(res => res.text())
+            .then(count => {
+              // cập nhật tất cả các phần tử .cart-count-badge trên trang
+              document.querySelectorAll('.cart-count-badge').forEach(el => {
+                // nếu server trả 0 và bạn muốn ẩn badge khi 0
+                if (Number(count) <= 0) {
+                  el.classList.add('hidden');  // bạn đã có css .hidden
+                  el.textContent = 0;
+                } else {
+                  el.classList.remove('hidden');
+                  el.textContent = count;
+                }
+              });
+            })
+            .catch(err => console.error('[cart] Không thể lấy count', err));
+  }
+
+  // gọi khi DOM sẵn sàng
+  document.addEventListener('DOMContentLoaded', function() {
+    updateCartCount();
+  });
+  document.addEventListener("DOMContentLoaded", function() {
+
+    function setupRowPagination(containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      function attachPagination() {
+        container.querySelectorAll(".grid-pagination button").forEach(btn => {
+          btn.onclick = function(e) {
+            e.preventDefault();
+            const url = this.getAttribute("data-url");
+            if (!url) return;
+
+            // slide out current
+            container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+            container.style.transform = 'translateX(-100%)';
+            container.style.opacity = 0;
+
+            fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+                    .then(res => res.text())
+                    .then(html => {
+                      const tempDiv = document.createElement('div');
+                      tempDiv.innerHTML = html;
+
+                      // tìm đúng fragment mới trong response
+                      const newSection = tempDiv.querySelector('#' + containerId);
+                      if (newSection) {
+                        setTimeout(() => {
+                          container.innerHTML = newSection.innerHTML;
+
+                          // slide in
+                          container.style.transform = 'translateX(100%)';
+                          container.style.opacity = 0;
+                          requestAnimationFrame(() => {
+                            container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                            container.style.transform = 'translateX(0)';
+                            container.style.opacity = 1;
+                          });
+
+                          // attach listener cho button mới
+                          attachPagination();
+
+                          // update URL để giữ lịch sử
+                          history.pushState(null, '', url);
+                        }, 300);
+                      }
+                    })
+                    .catch(err => console.error('AJAX pagination error:', err));
+          };
+        });
+      }
+
+      attachPagination();
+    }
+
+    // gọi cho cả 3 row
+    setupRowPagination('product-grid-new');
+    setupRowPagination('product-grid-sale');
+    setupRowPagination('product-grid-hot');
+
+  });
+</script>
+
+<footer>
+  <div th:replace="~{fragments/fragments :: footer}"></div>
+</footer>
+
+<script src="/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
