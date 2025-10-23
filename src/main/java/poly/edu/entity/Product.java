@@ -42,8 +42,9 @@ public class Product {
     @Column(name = "stock_quantity")
     private Integer stockQuantity;
 
+    // ✅ Đảm bảo mapping tới Category có khóa chính là categoryId
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id", referencedColumnName = "category_id", nullable = false)
     private Category category;
 
     @Column(name = "is_featured")
@@ -56,7 +57,7 @@ public class Product {
     private Boolean isOnSale;
 
     @Column(name = "image_url", length = 500)
-    private String imageUrl;
+    private String imageUrl; // Trường gốc dùng để lưu URL/tên file ảnh
 
     @Column(name = "views_count")
     private Integer viewsCount;
@@ -72,6 +73,20 @@ public class Product {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // --- Bổ sung Getter ảo để tương thích với Thymeleaf (nếu dùng ${p.image}) ---
+
+    /**
+     * Phương thức Getter ảo (Transient Getter) để hỗ trợ cú pháp cũ
+     * ${p.image} trong Thymeleaf, nếu muốn tránh sửa search.html.
+     * Nếu đã sửa search.html thành ${p.imageUrl} thì không cần thiết.
+     */
+    @Transient // Không ánh xạ vào CSDL
+    public String getImage() {
+        return this.imageUrl;
+    }
+
+    // --- Kết thúc phần bổ sung ---
 
     @PrePersist
     protected void onCreate() {
@@ -95,7 +110,7 @@ public class Product {
     @Transient
     private BigDecimal finalPrice; // Giá sau khi giảm
 
-    // Method tính giá cuối cùng
+    // ✅ Giá cuối cùng (có giảm giá thì lấy discountPrice)
     public BigDecimal getFinalPrice() {
         if (discountPrice != null && discountPrice.compareTo(BigDecimal.ZERO) > 0) {
             return discountPrice;
@@ -103,19 +118,26 @@ public class Product {
         return price;
     }
 
-    // Method tính % giảm giá
+    // ✅ % giảm giá
     public Integer getDiscountPercent() {
         if (discountPrice != null && discountPrice.compareTo(BigDecimal.ZERO) > 0 && price != null) {
-            java.math.BigDecimal discount = price.subtract(discountPrice);
-            java.math.BigDecimal percent = discount.divide(price, 2, java.math.BigDecimal.ROUND_HALF_UP).multiply(new java.math.BigDecimal(100));
+            BigDecimal discount = price.subtract(discountPrice);
+            BigDecimal percent = discount.divide(price, 2, java.math.RoundingMode.HALF_UP)
+                    .multiply(new BigDecimal(100));
             return percent.intValue();
         }
         return 0;
     }
 
-    // helper để lấy tên category dễ dùng trong view (tránh NPE nếu lazy)
+    // ✅ Lấy tên category an toàn (tránh null pointer khi lazy)
     public String getCategoryName() {
         if (category != null) return category.getCategoryName();
         return categoryName;
+    }
+
+    // ✅ Lấy ID của category (để query không lỗi)
+    public Long getCategoryId() {
+        if (category != null) return category.getCategoryId();
+        return null;
     }
 }

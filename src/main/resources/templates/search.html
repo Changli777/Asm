@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Kết quả tìm kiếm - Shopii</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css" />
+
+  <style>
+    /* ================================================= */
+    /* SỬA LỖI FOOTER: DÙNG FLEXBOX CHO BODY */
+    /* ================================================= */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* Đảm bảo HTML và BODY chiếm toàn bộ chiều cao màn hình */
+    html, body {
+      height: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      color: #222;
+      /* Thêm thuộc tính Flexbox cho body */
+      display: flex;
+      flex-direction: column;
+    }
+
+    a { color: #0d6efd; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Container chính chứa nội dung (trừ header/footer) phải có flex: 1 để kéo giãn */
+    .main-content-wrapper {
+      flex: 1; /* Kéo giãn khu vực nội dung */
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 24px;
+      width: 100%;
+    }
+
+    /* ĐÃ SỬA: THÊM margin-top ĐỂ TẠO KHOẢNG CÁCH VỚI THANH TÌM KIẾM */
+    .result-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 22px;
+      box-shadow: 0 6px 18px rgba(25, 25, 25, 0.06);
+      /* DÒNG ĐÃ THÊM */
+      margin-top: 20px;
+    }
+
+    /* Đổi tên class container cũ thành .content-inner để chứa các phần bên trong */
+    .content-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0; /* Đã có padding ở .main-content-wrapper */
+    }
+
+    footer {
+      /* Bỏ margin-top: auto vì flexbox đã xử lý việc đẩy xuống */
+      margin-top: 0;
+    }
+
+    /* ========== CART OVERLAY + PANEL (Giữ nguyên) ========== */
+    #cart-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 1200;
+    }
+    #cart-overlay.hidden {
+      display: none;
+    }
+    #cart-overlay.show {
+      opacity: 1;
+    }
+    #cart-panel {
+      position: fixed;
+      top: 0;
+      right: -420px;
+      width: 400px;
+      height: 100%;
+      background: #fff;
+      box-shadow: -5px 0 15px rgba(0,0,0,0.25);
+      overflow-y: auto;
+      transition: right 0.3s ease;
+      z-index: 1250;
+      padding: 20px;
+    }
+    #cart-panel.hidden {
+      display: none;
+    }
+    #cart-panel.show {
+      right: 0;
+    }
+    .cart-close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: transparent;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div th:replace="~{fragments/fragments :: header}"></div>
+
+<div class="main-content-wrapper">
+  <div class="content-inner"> <div th:replace="~{fragments/fragments :: searchFilter}"></div>
+
+    <div class="result-card">
+      <h2>Kết quả tìm kiếm</h2>
+
+      <div th:if="${#lists.isEmpty(results)}" class="no-result">
+        Không tìm thấy sản phẩm nào.
+      </div>
+
+      <div th:unless="${#lists.isEmpty(results)}">
+        <div th:replace="~{fragments/productGrid :: productGrid(
+                    products=${results},
+                    sectionTitle='',
+                    prevUrl=null,
+                    nextUrl=null,
+                    sectionId='search'
+                )}"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="cart-overlay" class="hidden"></div>
+<div id="cart-panel" class="hidden"></div>
+
+<footer>
+  <div th:replace="~{fragments/fragments :: footer}"></div>
+</footer>
+
+<script>
+  // ... (Phần JS giữ nguyên) ...
+</script>
+
+<script src="/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
