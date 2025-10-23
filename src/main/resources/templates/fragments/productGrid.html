@@ -10,15 +10,18 @@
         <span th:if="${product.isNew}">MỚI</span>
       </span>
 
-      <div class="product-image">
-        <a th:href="@{/product/{id}(id=${product.productId})}">
-          <img th:if="${product.imageUrl != null}"
-               th:src="@{${product.imageUrl}}"
-               th:alt="${product.productName}"
-               style="width: 100%; height: 100%; object-fit: cover;">
-          <span th:if="${product.imageUrl == null}"
-                th:text="${product.productName}">Product</span>
-        </a>
+      <div th:fragment="productGrid (products, sectionTitle, prevUrl, nextUrl, sectionId)" th:id="${'product-grid-' + sectionId}">
+        <div class="product-image">
+          <a th:href="@{/product/{id}(id=${product.productId})}">
+            <img th:if="${product.imageUrl != null}"
+                 th:src="@{${product.imageUrl}}"
+                 th:alt="${product.productName}"
+                 style="width: 100%; height: 100%; object-fit: cover;">
+            <span th:if="${product.imageUrl == null}"
+                  th:text="${product.productName}">Product</span>
+          </a>
+        </div>
+
       </div>
 
       <div class="product-info">
