@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quản lý Product</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css" />
+  <style>
+    .form-card .form-actions button[type="submit"] {
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      background: linear-gradient(180deg, #1986ff, #0b63d6);
+      color: #fff;
+      border: 1px solid rgba(5, 80, 200, 0.15);
+      box-shadow: 0 8px 20px rgba(11,99,214,0.12);
+      transition: transform .08s ease, box-shadow .12s ease, filter .08s ease;
+    }
+    .form-card .form-actions button[type="submit"]:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.03);
+    }
+    .form-card .form-actions button[type="submit"]:active { transform: translateY(1px); }
+
+    /* Reset button: nhẹ nhàng, outline style so không tranh attention với Save */
+    .form-card .form-actions button[type="button"] {
+      padding: 9px 14px;
+      border-radius: 10px;
+      background: #f6f8fb;
+      color: #2b2f36;
+      border: 1px solid #e6e9ee;
+      font-weight: 600;
+      transition: background .08s ease, transform .06s ease;
+    }
+    .form-card .form-actions button[type="button"]:hover {
+      background: #eef3fb;
+      transform: translateY(-1px);
+    }
+    .form-card .form-actions button[type="button"]:active { transform: translateY(1px); }
+
+    /* Edit button inside table: compact, neutral, consistent with theme */
+    .table-container table tbody td a > button[type="button"],
+    .table-container table tbody td a button {
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: #fff;
+      color: #0d6efd;
+      border: 1px solid rgba(13,110,253,0.12);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .08s ease, transform .06s ease, box-shadow .12s ease;
+      box-shadow: 0 6px 14px rgba(13,110,253,0.03);
+    }
+    .table-container table tbody td a > button[type="button"]:hover,
+    .table-container table tbody td a button:hover {
+      background: rgba(13,110,253,0.06);
+      transform: translateY(-1px);
+    }
+    .table-container table tbody td a > button[type="button"]:active { transform: translateY(1px); }
+
+    /* Make sure small buttons inside table (xóa etc.) align visually */
+    .table-container .btn-sm,
+    .table-container button.btn-sm {
+      padding: 6px 8px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+    }
+
+    /* Accessibility: focus outlines for keyboard users */
+    .form-card .form-actions button:focus,
+    .table-container table tbody td a > button:focus,
+    .table-container .btn:focus {
+      outline: 3px solid rgba(11,99,214,0.16);
+      outline-offset: 2px;
+    }
+
+    /* If you later add classes .btn-save/.btn-reset/.btn-edit these will match too */
+    .btn-save { /* optional class fallback */
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #1986ff, #0b63d6);
+      color: #fff;
+      border: 1px solid rgba(5,80,200,0.15);
+    }
+    .btn-reset { background:#f6f8fb; color:#2b2f36; border:1px solid #e6e9ee; }
+    .btn-edit  { background:#fff; color:#0d6efd; border:1px solid rgba(13,110,253,0.12); }
+    /* ---------- Reset / base giống home.html ---------- */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; color: #222; }
+    a { color: #0d6efd; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ---------- Container rộng hơn (dùng không gian) ---------- */
+    .container {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .form-card, .table-container {
+      background: #fff;
+      border-radius: 10px;
+      padding: 22px;
+      box-shadow: 0 6px 18px rgba(25, 25, 25, 0.06);
+    }
+    .form-card h5 { margin-bottom: 12px; font-size: 1.05rem; font-weight: 600; color: #111; }
+
+    /* search */
+    .search-wrapper { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .input-group { width: 100%; max-width: 820px; display:flex; gap:8px; }
+    .input-group .form-control { border-radius:8px; padding:10px; }
+
+    /* form grid */
+    .form-grid { display:grid; grid-template-columns: repeat(2,1fr); gap:14px 18px; align-items:start; }
+    @media (min-width:1200px) { .form-grid { grid-template-columns: repeat(3,1fr); } }
+    .form-grid .full-row { grid-column:1 / -1; }
+
+    .form-card label { display:block; margin-bottom:6px; font-size:.92rem; color:#444; }
+    .form-card input[type="text"], .form-card input[type="email"], .form-card input[type="number"], .form-card input[type="date"], .form-card textarea, .form-card select {
+      width:100%; padding:10px 12px; border:1px solid #e3e6ea; border-radius:8px; background:#fff; font-size:.95rem;
+    }
+    .form-card input:focus, .form-card textarea:focus, .form-card select:focus {
+      outline:none; border-color:#bcd0ff; box-shadow:0 6px 18px rgba(13,110,253,0.06);
+    }
+
+    .small-muted { font-size: .84rem; color: #6c757d; margin-top:4px; }
+
+    .btn { display:inline-flex; align-items:center; justify-content:center; padding:8px 12px; border-radius:8px; border:1px solid transparent; font-size:.95rem; cursor:pointer; }
+    .btn-primary { background: linear-gradient(180deg,#0d6efd,#0b5ed7); color:#fff; box-shadow:0 6px 16px rgba(13,110,253,0.14); border-color: rgba(0,0,0,0.03); }
+    .btn-secondary { background:#f1f3f5; color:#212529; border:1px solid #e6e9ee; }
+    .btn-outline-danger { background:transparent; color:#dc3545; border:1px solid #dc3545; }
+
+    .form-actions { display:flex; gap:10px; align-items:center; justify-content:flex-start; margin-top:12px; }
+
+    .table-container { margin-top:20px; padding:20px; }
+    .table-responsive { width:100%; overflow-x:auto; }
+    table { width:1200px; max-width:100%; border-collapse:collapse; font-size:0.96rem; }
+    thead tr { background:linear-gradient(180deg,#fafbfc,#f3f6fb); color:#333; text-transform:uppercase; font-size:.78rem; letter-spacing:.02em; }
+    thead th { padding:12px 14px; text-align:left; border-bottom:1px solid #eef1f6; white-space:nowrap; }
+    tbody td { padding:12px 14px; border-bottom:1px solid #f1f3f7; vertical-align:middle; color:#333; white-space:nowrap; }
+    tbody tr:hover { background: rgba(13,110,253,0.02); }
+    .thumb { width:64px; height:64px; object-fit:cover; border-radius:6px; border:1px solid #e6e9ee; }
+
+    @media (max-width:1199px) { .form-grid { grid-template-columns: repeat(2,1fr); } table { width:100%; } }
+    @media (max-width:768px) { .form-grid { grid-template-columns: 1fr; gap:12px; } .form-actions { justify-content:space-between; } .input-group { flex-direction:column; } }
+
+    .mb-2 { margin-bottom:10px; }
+    .hidden { display:none !important; }
+  </style>
+</head>
+<body>
+<div th:replace="~{fragments/fragments :: header}"></div>
+
+<div class="container mt-4">
+  <!-- Search -->
+  <form class="mb-3" th:action="@{/admin/product}" method="get">
+    <div class="input-group">
+      <input class="form-control" type="text" name="q" placeholder="Tìm theo tên hoặc mô tả" th:value="${searchQuery}">
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-secondary" type="submit">Tìm</button>
+        <a class="btn btn-secondary" th:href="@{/admin/product}">Clear</a>
+      </div>
+    </div>
+  </form>
+
+  <div class="row">
+    <!-- Form -->
+    <div class="col-md-5">
+      <div class="form-card">
+        <h5 th:text="${productForm.productId != null} ? 'Chỉnh sửa product' : 'Tạo product mới'"></h5>
+
+        <form th:action="@{/admin/product/save/{id}(id=${productForm.productId != null ? productForm.productId : 0})}"
+              method="post"
+              enctype="multipart/form-data"
+              th:object="${productForm}">
+
+          <div class="form-grid">
+            <div class="mb-2">
+              <label>ProductID</label>
+              <input class="form-control" type="text" th:field="*{productId}" readonly />
+            </div>
+
+            <div class="mb-2">
+              <label>Tên sản phẩm</label>
+              <input class="form-control" type="text" th:field="*{productName}" required />
+            </div>
+
+            <div class="mb-2">
+              <label>Giá (VNĐ)</label>
+              <input class="form-control" type="number" th:field="*{price}" step="1" min="0" required />
+            </div>
+
+            <div class="mb-2">
+              <label>Giá giảm (nếu có)</label>
+              <input class="form-control" type="number" th:field="*{discountPrice}" step="1" min="0" />
+            </div>
+
+            <div class="mb-2">
+              <label>Số lượng</label>
+              <input class="form-control" type="number" th:field="*{stockQuantity}" min="1" required />
+            </div>
+
+            <div class="mb-2">
+              <label>Category</label>
+              <select class="form-control" th:field="*{category.categoryId}">
+                <option value="">--Chọn--</option>
+                <option th:each="c : ${categories}" th:value="${c.categoryId}" th:text="${c.categoryName}"
+                        th:selected="${productForm.category != null and productForm.category.categoryId == c.categoryId}"></option>
+              </select>
+            </div>
+
+            <div class="mb-2">
+              <label>Ảnh sản phẩm</label>
+              <input class="form-control" type="file" name="imageFile" accept="image/*" />
+              <div class="small-muted">Ảnh sẽ được upload vào folder <code>/photos/</code></div>
+            </div>
+
+            <div class="mb-2">
+              <label>Flags</label>
+              <div style="display:flex; gap:8px;">
+                <label><input type="checkbox" th:field="*{isFeatured}" /> Featured</label>
+                <label><input type="checkbox" th:field="*{isNew}" /> New</label>
+                <label><input type="checkbox" th:field="*{isOnSale}" /> On sale</label>
+              </div>
+            </div>
+
+            <div class="mb-2 full-row">
+              <label>Mô tả</label>
+              <textarea class="form-control" th:field="*{description}"></textarea>
+            </div>
+
+            <div class="mb-2">
+              <label>Views</label>
+              <input class="form-control" type="number" th:field="*{viewsCount}" min="0" />
+            </div>
+
+            <div class="mb-2">
+              <label>Sold</label>
+              <input class="form-control" type="number" th:field="*{soldCount}" min="0" />
+            </div>
+
+            <div class="mb-2 full-row">
+              <label>Preview ảnh hiện tại</label>
+              <div th:if="${productForm.imageUrl != null}">
+                <img th:src="${productForm.imageUrl}" alt="thumb" class="thumb"/>
+              </div>
+              <div th:if="${productForm.imageUrl == null}" class="small-muted">Chưa có ảnh</div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit">Save</button>
+            <button type="button" onclick="window.location.href='/admin/product'">Reset</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="col-md-7">
+      <div class="table-container">
+        <div class="table-responsive">
+          <table>
+            <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tên</th>
+              <th>Ảnh</th>
+              <th>Giá</th>
+              <th>Giảm</th>
+              <th>Cuối</th>
+              <th>SL</th>
+              <th>Category</th>
+              <th>Flags</th>
+              <th style="width:130px">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="p : ${products}">
+              <td th:text="${p.productId}"></td>
+              <td th:text="${p.productName}"></td>
+              <td>
+                <img th:if="${p.imageUrl != null}" th:src="${p.imageUrl}" class="thumb" alt="img"/>
+                <span th:if="${p.imageUrl == null}" class="small-muted">No</span>
+              </td>
+              <td th:text="${formattedPriceMap[p.productId] != null ? formattedPriceMap[p.productId]['price'] : ''}"></td>
+              <td th:text="${formattedPriceMap[p.productId] != null ? formattedPriceMap[p.productId]['discount'] : ''}"></td>
+              <td th:text="${formattedPriceMap[p.productId] != null ? formattedPriceMap[p.productId]['final'] : ''}"></td>
+              <td th:text="${p.stockQuantity}"></td>
+              <td th:text="${p.category != null ? p.category.categoryName : ''}"></td>
+              <td th:text="${(p.isFeatured ? 'F' : '') + (p.isNew ? ' N' : '') + (p.isOnSale ? ' S' : '')}"></td>
+              <td>
+                <a th:href="@{/admin/product/create(id=${p.productId})}">
+                  <button type="button">Edit</button>
+                </a>
+                <form th:action="@{/admin/product/delete/{id}(id=${p.productId})}" method="post" style="display:inline-block" onsubmit="return confirm('Xác nhận xóa?');">
+                  <button class="btn btn-sm btn-outline-danger" type="submit">Xóa</button>
+                </form>
+              </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(products)}">
+              <td colspan="10" class="text-center small-muted">Không có product nào</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div th:if="${message != null}">
+  <script th:inline="javascript">
+    Swal.fire({
+      icon: 'success',
+      title: 'Thành công!',
+      text: [[${message}]],
+      showConfirmButton: false,
+      timer: 1800
+    });
+  </script>
+</div>
+
+<div th:if="${error != null}">
+  <script th:inline="javascript">
+    Swal.fire({
+      icon: 'error',
+      title: 'Thất bại!',
+      text: [[${error}]],
+      showConfirmButton: true
+    });
+  </script>
+</div>
+
+
+</div>
+
+<!-- Overlay & panel -->
+<div id="cart-overlay" class="hidden"></div>
+<div id="cart-panel" class="hidden"></div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    console.log("[cart] Ready");
+
+    const overlay = document.getElementById("cart-overlay");
+    const panel = document.getElementById("cart-panel");
+
+    // khi click icon giỏ hàng trong header
+    document.body.addEventListener("click", function(e) {
+      const icon = e.target.closest(".cart-icon-header");
+      if (!icon) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      console.log("[cart] Icon clicked, loading fragment...");
+
+      fetch("/cart")
+              .then(res => res.text())
+              .then(html => {
+                panel.innerHTML = html;
+                overlay.classList.remove("hidden");
+                panel.classList.remove("hidden");
+                requestAnimationFrame(() => {
+                  overlay.classList.add("show");
+                  panel.classList.add("show");
+                });
+              })
+              .catch(err => console.error("[cart] Lỗi khi load fragment:", err));
+    });
+
+    // đóng khi click ra ngoài
+    overlay.addEventListener("click", closeCart);
+
+    // đóng khi bấm nút X
+    panel.addEventListener("click", e => {
+      if (e.target.classList.contains("cart-close-btn") || e.target.classList.contains("close-cart")) {
+        closeCart();
+      }
+    });
+
+    // ESC để đóng
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeCart();
+    });
+
+    function closeCart() {
+      overlay.classList.remove("show");
+      panel.classList.remove("show");
+      setTimeout(() => {
+        overlay.classList.add("hidden");
+        panel.classList.add("hidden");
+      }, 300);
+    }
+  });
+  // gọi khi trang load
+  function updateCartCount() {
+    fetch("/cart/count")
+            .then(res => res.text())
+            .then(count => {
+              // cập nhật tất cả các phần tử .cart-count-badge trên trang
+              document.querySelectorAll('.cart-count-badge').forEach(el => {
+                // nếu server trả 0 và bạn muốn ẩn badge khi 0
+                if (Number(count) <= 0) {
+                  el.classList.add('hidden');  // bạn đã có css .hidden
+                  el.textContent = 0;
+                } else {
+                  el.classList.remove('hidden');
+                  el.textContent = count;
+                }
+              });
+            })
+            .catch(err => console.error('[cart] Không thể lấy count', err));
+  }
+
+  // gọi khi DOM sẵn sàng
+  document.addEventListener('DOMContentLoaded', function() {
+    updateCartCount();
+  });
+  document.addEventListener("DOMContentLoaded", function() {
+
+    function setupRowPagination(containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      function attachPagination() {
+        container.querySelectorAll(".grid-pagination button").forEach(btn => {
+          btn.onclick = function(e) {
+            e.preventDefault();
+            const url = this.getAttribute("data-url");
+            if (!url) return;
+
+            // slide out current
+            container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+            container.style.transform = 'translateX(-100%)';
+            container.style.opacity = 0;
+
+            fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+                    .then(res => res.text())
+                    .then(html => {
+                      const tempDiv = document.createElement('div');
+                      tempDiv.innerHTML = html;
+
+                      // tìm đúng fragment mới trong response
+                      const newSection = tempDiv.querySelector('#' + containerId);
+                      if (newSection) {
+                        setTimeout(() => {
+                          container.innerHTML = newSection.innerHTML;
+
+                          // slide in
+                          container.style.transform = 'translateX(100%)';
+                          container.style.opacity = 0;
+                          requestAnimationFrame(() => {
+                            container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                            container.style.transform = 'translateX(0)';
+                            container.style.opacity = 1;
+                          });
+
+                          // attach listener cho button mới
+                          attachPagination();
+
+                          // update URL để giữ lịch sử
+                          history.pushState(null, '', url);
+                        }, 300);
+                      }
+                    })
+                    .catch(err => console.error('AJAX pagination error:', err));
+          };
+        });
+      }
+
+      attachPagination();
+    }
+
+    // gọi cho cả 3 row
+    setupRowPagination('product-grid-new');
+    setupRowPagination('product-grid-sale');
+    setupRowPagination('product-grid-hot');
+
+  });
+</script>
+
+<footer>
+  <div th:replace="~{fragments/fragments :: footer}"></div>
+</footer>
+
+<script src="/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
