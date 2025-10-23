@@ -26,10 +26,6 @@ public interface OrderService {
     void markDelivered(Order order);             // Shipping -> Delivered
     void adminConfirmPayment(Order order);       // Delivered -> Admin xác nhận
     void customerConfirmPayment(Order order);
-}
-    List<Order> findByStatusAndUser(String status, User user, String sort);
-    Optional<Order> findByOrderIdAndUser(Long orderId, User user);
-    boolean cancelOrder(Long orderId, User user, String reason);
-    Order save(Order order);
+
     Optional<Order> findByOrderNumber(String orderNumber);
 }

@@ -16,6 +16,11 @@ import java.util.Optional;
 @Service
 public class OrderServiceImpl implements OrderService {
     @Override
+    public Optional<Order> findByOrderNumber(String orderNumber) {
+        return orderDAO.findByOrderNumber(orderNumber);
+    }
+
+    @Override
     public List<Order> findByStatus(String status) {
         return orderDAO.findByStatus(status);
     }

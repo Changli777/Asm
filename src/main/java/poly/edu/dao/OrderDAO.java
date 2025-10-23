@@ -31,4 +31,5 @@ public interface OrderDAO extends JpaRepository<Order, Long> {
     List<Order> findByUser_UsernameContainingIgnoreCaseOrderByCreatedAtDesc(String username);
     List<Order> findByUser_UsernameContainingIgnoreCaseOrderByCreatedAtAsc(String username);
 
+    List<Order> findByStatus(String status);
 }
