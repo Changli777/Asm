@@ -5,404 +5,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đơn hàng đang giao - Shopii</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* ==== RESET ==== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; display: flex; flex-direction: column; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; flex: 1; }
+        footer { margin-top: auto; }
 
-        html, body {
-            height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            display: flex;
-            flex-direction: column;
-        }
+        /* ==== ALERTS ==== */
+        .alert { padding: 12px 20px; border-radius: 6px; font-size: 1rem; margin-bottom: 20px; display: block; }
+        .alert-success { background: #e6ffed; color: #167a2f; border: 1px solid #baf3c3; }
+        .alert-error { background: #fff2f0; color: #b71c1c; border: 1px solid #f5c6cb; }
+        .alert-info { background: #eaf4ff; color: #1e3a8a; border: 1px solid #a5d8ff; }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            flex: 1;
-        }
+        /* ==== PAGE HEADER ==== */
+        .page-header { margin-bottom: 32px; text-align: left; }
+        .page-header h1 { font-size: 2rem; font-weight: 700; color: #333; }
+        .page-header p { color: #666; margin-top: 4px; }
 
-        footer {
-            margin-top: auto;
-        }
+        /* ==== EMPTY STATE ==== */
+        .empty-state { text-align: center; padding: 60px 0; color: #888; }
+        .empty-state svg { width: 60px; height: 60px; color: #bbb; margin-bottom: 10px; }
+        .empty-state h2 { font-size: 1.3rem; margin-bottom: 4px; color: #333; }
+        .empty-state p { color: #666; }
 
-        /* ========== CART OVERLAY + PANEL ========== */
-        #cart-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.45);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: 1200;
-        }
-        #cart-overlay.hidden {
-            display: none;
-        }
-        #cart-overlay.show {
-            opacity: 1;
-        }
-        #cart-panel {
-            position: fixed;
-            top: 0;
-            right: -420px;
-            width: 400px;
-            height: 100%;
-            background: #fff;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.25);
-            overflow-y: auto;
-            transition: right 0.3s ease;
-            z-index: 1250;
-            padding: 20px;
-        }
-        #cart-panel.hidden {
-            display: none;
-        }
-        #cart-panel.show {
-            right: 0;
-        }
-        .cart-close-btn {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            background: transparent;
-            border: none;
-            font-size: 22px;
-            cursor: pointer;
-        }
+        /* ==== ORDER CARD ==== */
+        .order-card { background: #fff; border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,0.07); margin-bottom: 34px; padding: 18px 22px; transition: box-shadow 0.2s; }
+        .order-card:hover { box-shadow: 0 6px 18px rgba(0,0,0,0.12); }
+        .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #f0f0f0; padding-bottom: 9px; }
+        .order-header-left h3 { font-size: 1.1rem; font-weight: 600; color: #1e293b; }
+        .order-header-left p { font-size: 0.95rem; color: #5c5c5c; margin-top: 3px; }
+        .order-status { font-size: 1rem; padding: 6px 18px; border-radius: 16px; background: #eaf7fd; color: #2684ff; font-weight: 500; letter-spacing: .02em; }
 
-        /* ========== PAGE HEADER ========== */
-        .page-header {
-            margin-bottom: 32px;
-            text-align: left;
-        }
-        .page-header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #333;
-        }
-        .page-header p {
-            color: #666;
-            margin-top: 4px;
-        }
+        /* ==== PRODUCT ITEM ==== */
+        .product-item { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid #f1f1f1; background: #f9fafb; border-radius: 8px; margin-bottom: 12px; }
+        .product-item:last-child { border-bottom: none; margin-bottom: 0; }
+        .product-image { width: 74px; height: 74px; object-fit: cover; border-radius: 7px; margin-right: 18px; background: #eee; border: 1px solid #ececec; }
+        .product-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+        .product-name { font-size: 1.05rem; font-weight: 500; color: #222; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .product-price-line { display: flex; align-items: center; gap: 10px; }
+        .product-price { font-size: 1rem; color: #d32f2f; font-weight: 600; }
+        .product-quantity { font-size: 0.97rem; color: #555; }
+        .product-subtotal { font-size: 1.02rem; color: #1976d2; font-weight: 500; margin-left: 18px; }
 
-        /* ========== ALERTS ========== */
-        .alert {
-            padding: 12px 20px;
-            border-radius: 6px;
-            font-size: 1rem;
-            margin-bottom: 20px;
-            display: block;
-        }
-        .alert-success {
-            background: #e6ffed;
-            color: #167a2f;
-            border: 1px solid #baf3c3;
-        }
-        .alert-error {
-            background: #fff2f0;
-            color: #b71c1c;
-            border: 1px solid #f5c6cb;
-        }
+        /* ==== ORDER FOOTER ==== */
+        .order-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #f0f0f0; }
+        .order-total { font-size: 1.1rem; font-weight: 600; color: #c62828; }
+        .order-actions { display: flex; gap: 12px; }
+        .btn { display: inline-block; padding: 7px 18px; font-size: 1rem; border-radius: 6px; border: none; cursor: pointer; transition: background 0.18s, color 0.18s, box-shadow 0.18s; outline: none; font-weight: 500; }
+        .btn-detail { background: #1976d2; color: #fff; border: 1px solid #1976d2; }
+        .btn-detail:hover { background: #135ba1; border-color: #135ba1; }
+        .btn-confirm-received { background: #28a745; color: #fff; border: 1px solid #28a745; }
+        .btn-confirm-received:hover { background: #1e7e34; border-color: #1e7e34; }
 
-        /* ========== FILTER SECTION ========== */
-        .filter-section {
-            margin-bottom: 18px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .filter-section label {
-            font-weight: 500;
-            margin-right: 8px;
-        }
-        #sortSelect {
-            padding: 6px 14px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-            background: #fff;
-            font-size: 1rem;
-            outline: none;
-        }
+        /* ==== MODAL ==== */
+        .modal { display: none; position: fixed; z-index: 1300; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.33); justify-content: center; align-items: center; }
+        .modal-content { background: #fff; border-radius: 10px; max-width: 420px; margin: 80px auto; padding: 28px 24px 22px 24px; box-shadow: 0 6px 32px rgba(0,0,0,0.13); position: relative; }
+        .modal-header h2 { font-size: 1.3rem; font-weight: 600; color: #333; margin-bottom: 10px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 12px; }
+        .btn-modal-cancel { background: #f7f7f7; color: #333; border: 1px solid #ccc; }
+        .btn-modal-cancel:hover { background: #e0e0e0; }
+        .btn-modal-confirm { background: #1976d2; color: #fff; border: 1px solid #1976d2; }
+        .btn-modal-confirm:hover { background: #135ba1; border-color: #135ba1; }
 
-        /* ========== EMPTY STATE ========== */
-        .empty-state {
-            text-align: center;
-            padding: 60px 0;
-            color: #888;
-        }
-        .empty-state svg {
-            width: 60px;
-            height: 60px;
-            color: #bbb;
-            margin-bottom: 10px;
-        }
-        .empty-state h2 {
-            font-size: 1.3rem;
-            margin-bottom: 4px;
-            color: #333;
-        }
-        .empty-state p {
-            color: #666;
-        }
-
-        /* ========== ORDER CARD ========== */
-        .order-card {
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.07);
-            margin-bottom: 34px;
-            padding: 18px 22px;
-            transition: box-shadow 0.2s;
-        }
-        .order-card:hover {
-            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-        }
-
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            border-bottom: 1px solid #f0f0f0;
-            padding-bottom: 9px;
-        }
-        .order-header-left h3 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #1e293b;
-        }
-        .order-header-left p {
-            font-size: 0.95rem;
-            color: #5c5c5c;
-            margin-top: 3px;
-        }
-        .order-status {
-            font-size: 1rem;
-            padding: 6px 18px;
-            border-radius: 16px;
-            background: #eaf7fd;
-            color: #2684ff;
-            font-weight: 500;
-            letter-spacing: .02em;
-        }
-
-        /* ========== ORDER BODY ========== */
-        .order-body {
-            margin-top: 12px;
-        }
-
-        /* ========== PRODUCT ITEM CARD (INLINE) ========== */
-        .product-item {
-            display: flex;
-            align-items: center;
-            padding: 14px 0;
-            border-bottom: 1px solid #f1f1f1;
-            background: #f9fafb;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            transition: box-shadow 0.2s;
-        }
-        .product-item:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-        }
-        .product-image {
-            width: 74px;
-            height: 74px;
-            object-fit: cover;
-            border-radius: 7px;
-            margin-right: 18px;
-            background: #eee;
-            border: 1px solid #ececec;
-        }
-        .product-info {
-            flex: 1;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .product-name {
-            font-size: 1.05rem;
-            font-weight: 500;
-            color: #222;
-            margin-bottom: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .product-price-line {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .product-price {
-            font-size: 1rem;
-            color: #d32f2f;
-            font-weight: 600;
-        }
-        .product-quantity {
-            font-size: 0.97rem;
-            color: #555;
-        }
-        .product-subtotal {
-            font-size: 1.02rem;
-            color: #1976d2;
-            font-weight: 500;
-            margin-left: 18px;
-        }
-
-        /* ========== ORDER FOOTER ========== */
-        .order-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 15px;
-            padding-top: 10px;
-            border-top: 1px solid #f0f0f0;
-        }
-        .order-total {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #c62828;
-        }
-        .order-actions {
-            display: flex;
-            gap: 12px;
-        }
-        .btn {
-            display: inline-block;
-            padding: 7px 18px;
-            font-size: 1rem;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-            outline: none;
-            font-weight: 500;
-        }
-        .btn-detail {
-            background: #1976d2;
-            color: #fff;
-            border: 1px solid #1976d2;
-        }
-        .btn-detail:hover {
-            background: #135ba1;
-            border-color: #135ba1;
-        }
-        .btn-cancel {
-            background: #fff;
-            color: #d32f2f;
-            border: 1px solid #d32f2f;
-        }
-        .btn-cancel:hover {
-            background: #ffd4d4;
-        }
-
-        /* ========== MODAL (CANCEL) ========== */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1300;
-            left: 0; top: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.33);
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background: #fff;
-            border-radius: 10px;
-            max-width: 420px;
-            margin: 80px auto;
-            padding: 28px 24px 22px 24px;
-            box-shadow: 0 6px 32px rgba(0,0,0,0.13);
-            position: relative;
-        }
-        .modal-header h2 {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        .modal-body textarea {
-            width: 100%;
-            min-height: 70px;
-            border-radius: 7px;
-            border: 1px solid #ddd;
-            padding: 9px 11px;
-            font-size: 1rem;
-            margin-bottom: 12px;
-            resize: vertical;
-            outline: none;
-            background: #f8f9fa;
-        }
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-        }
-        .btn-modal-cancel {
-            background: #f7f7f7;
-            color: #333;
-            border: 1px solid #ccc;
-        }
-        .btn-modal-cancel:hover {
-            background: #e0e0e0;
-        }
-        .btn-modal-confirm {
-            background: #1976d2;
-            color: #fff;
-            border: 1px solid #1976d2;
-        }
-        .btn-modal-confirm:hover {
-            background: #135ba1;
-            border-color: #135ba1;
-        }
-
-        /* ========== CART BADGE ========== */
-        .cart-count-badge {
-            display: inline-block;
-            min-width: 22px;
-            padding: 2px 6px;
-            background: #d32f2f;
-            color: #fff;
-            font-size: 0.95rem;
-            font-weight: 600;
-            border-radius: 16px;
-            text-align: center;
-            margin-left: 8px;
-            vertical-align: middle;
-        }
-        .cart-count-badge.hidden {
-            display: none;
-        }
+        /* ==== CART BADGE ==== */
+        .cart-count-badge { display: inline-block; min-width: 22px; padding: 2px 6px; background: #d32f2f; color: #fff; font-size: 0.95rem; font-weight: 600; border-radius: 16px; text-align: center; margin-left: 8px; vertical-align: middle; }
+        .cart-count-badge.hidden { display: none; }
     </style>
 </head>
 <body>
 <div th:replace="~{fragments/fragments :: header}"></div>
 
 <div class="container">
-    <!-- Page Header -->
     <div class="page-header">
         <h1>Đơn hàng đã giao</h1>
         <p>Xác nhận đã nhận hàng để hoàn tất đơn hàng</p>
     </div>
 
-    <!-- Alert Messages -->
     <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
     <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
 
-    <!-- Info Alert -->
     <div class="alert alert-info">
         <strong>Lưu ý:</strong> Vui lòng kiểm tra hàng hóa và xác nhận đã nhận hàng. Sau khi xác nhận, bạn có thể đánh giá sản phẩm.
     </div>
 
-    <!-- Filter & Sort Section -->
     <div class="filter-section">
         <div>
             <label>Sắp xếp theo:</label>
@@ -413,7 +98,6 @@
         </div>
     </div>
 
-    <!-- Empty State -->
     <div th:if="${orders == null || orders.isEmpty()}" class="empty-state">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
@@ -422,10 +106,8 @@
         <p>Bạn chưa có đơn hàng đã giao</p>
     </div>
 
-    <!-- Order Cards -->
     <div th:if="${orders != null && !orders.isEmpty()}">
         <div th:each="order : ${orders}" class="order-card">
-            <!-- Order Header -->
             <div class="order-header">
                 <div class="order-header-left">
                     <h3>Đơn hàng: <span th:text="${order.orderNumber}">ORD-123456</span></h3>
@@ -434,32 +116,6 @@
                 <div class="order-status">Đã giao</div>
             </div>
 
-            <!-- Delivery Notice -->
-            <div class="delivery-notice">
-                <div class="delivery-notice-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
-                    Giao hàng thành công
-                </div>
-                <div class="delivery-notice-details">
-                    <div>
-                        <strong>Người nhận:</strong>
-                        <span th:text="${order.shippingFullName}">Nguyễn Văn A</span>
-                        -
-                        <span th:text="${order.shippingPhone}">0901234567</span>
-                    </div>
-                    <div>
-                        <strong>Địa chỉ:</strong>
-                        <span th:text="${order.shippingAddress}">123 Đường ABC, Quận 1, TP.HCM</span>
-                    </div>
-                    <div>
-                        <strong>⏰ Vui lòng xác nhận đã nhận hàng để hoàn tất đơn hàng</strong>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Order Body - Product List -->
             <div class="order-body">
                 <div th:each="detail : ${order.details}" class="product-item">
                     <img th:src="@{${detail.product.imageUrl}}"
@@ -479,7 +135,6 @@
                 </div>
             </div>
 
-            <!-- Order Footer -->
             <div class="order-footer">
                 <div class="order-total">
                     Tổng cộng: <span th:text="${order.formattedTotalAmount + '₫'}">1.000.000₫</span>
@@ -488,296 +143,28 @@
                     <a th:href="@{/orders/detail/{id}(id=${order.orderId})}" class="btn btn-detail">
                         Xem chi tiết
                     </a>
-                    <button class="btn btn-confirm-received"
-                            th:onclick="'showConfirmModal(' + ${order.orderId} + ', \'' + ${order.orderNumber} + '\', \'' + ${order.formattedTotalAmount} + '\')'">
-                        ✓ Xác nhận đã nhận hàng
-                    </button>
+                    <form th:action="@{/orders/confirm-received}" method="post" style="display:inline;"
+                          onsubmit="return confirm('Bạn có chắc chắn đã nhận hàng đơn ' + '[[${order.orderNumber}]]' + ' không?');">
+                        <input type="hidden" name="orderId" th:value="${order.orderId}">
+                        <button type="submit" class="btn btn-confirm-received">✓ Xác nhận đã nhận hàng</button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Confirmation Modal -->
-<div id="confirmModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-            <h2>Xác nhận đã nhận hàng</h2>
-            <p>Vui lòng kiểm tra kỹ hàng hóa trước khi xác nhận. Sau khi xác nhận, đơn hàng sẽ được hoàn tất và bạn có thể đánh giá sản phẩm.</p>
-        </div>
-        <div class="modal-body">
-            <div class="order-summary">
-                <div><strong>Mã đơn hàng:</strong><span id="modalOrderNumber"></span></div>
-                <div><strong>Tổng tiền:</strong><span id="modalTotalAmount"></span>₫</div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-modal-cancel" onclick="closeConfirmModal()">Hủy</button>
-            <form id="confirmForm" th:action="@{/orders/confirm-received}" method="post" style="display: inline;">
-                <input type="hidden" id="confirmOrderId" name="orderId">
-                <button type="submit" class="btn btn-modal-confirm">Xác nhận nhận hàng</button>
-            </form>
-        </div>
-    </div>
-</div>
-
-
-<!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<div th:if="${message}">
-    <script th:inline="javascript">
-        Swal.fire({
-            icon: 'success',
-            title: 'Thành công!',
-            text: [[${message}]],
-            showConfirmButton: false,
-            timer: 1800
-        });
-    </script>
-</div>
-
-<div th:if="${error}">
-    <script th:inline="javascript">
-        Swal.fire({
-            icon: 'error',
-            title: 'Thất bại!',
-            text: [[${error}]],
-            showConfirmButton: true
-        });
-    </script>
-</div>
-</div>
-
-<!-- Overlay & panel -->
-<div id="cart-overlay" class="hidden"></div>
-<div id="cart-panel" class="hidden"></div>
-
-<footer>
-    <div th:replace="~{fragments/fragments :: footer}"></div>
-</footer>
-
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        console.log("[cart] Ready");
-
-        const overlay = document.getElementById("cart-overlay");
-        const panel = document.getElementById("cart-panel");
-
-        // khi click icon giỏ hàng trong header
-        document.body.addEventListener("click", function(e) {
-            const icon = e.target.closest(".cart-icon-header");
-            if (!icon) return;
-
-            e.preventDefault();
-            e.stopPropagation();
-            console.log("[cart] Icon clicked, loading fragment...");
-
-            fetch("/cart")
-                .then(res => res.text())
-                .then(html => {
-                    panel.innerHTML = html;
-                    overlay.classList.remove("hidden");
-                    panel.classList.remove("hidden");
-                    requestAnimationFrame(() => {
-                        overlay.classList.add("show");
-                        panel.classList.add("show");
-                    });
-                })
-                .catch(err => console.error("[cart] Lỗi khi load fragment:", err));
-        });
-
-        // đóng khi click ra ngoài
-        overlay.addEventListener("click", closeCart);
-
-        // đóng khi bấm nút X
-        panel.addEventListener("click", e => {
-            if (e.target.classList.contains("cart-close-btn") || e.target.classList.contains("close-cart")) {
-                closeCart();
-            }
-        });
-
-        // ESC để đóng
-        document.addEventListener("keydown", e => {
-            if (e.key === "Escape") closeCart();
-        });
-
-        function closeCart() {
-            overlay.classList.remove("show");
-            panel.classList.remove("show");
-            setTimeout(() => {
-                overlay.classList.add("hidden");
-                panel.classList.add("hidden");
-            }, 300);
-        }
-    });
-    // gọi khi trang load
-    function updateCartCount() {
-        fetch("/cart/count")
-            .then(res => res.text())
-            .then(count => {
-                // cập nhật tất cả các phần tử .cart-count-badge trên trang
-                document.querySelectorAll('.cart-count-badge').forEach(el => {
-                    // nếu server trả 0 và bạn muốn ẩn badge khi 0
-                    if (Number(count) <= 0) {
-                        el.classList.add('hidden');  // bạn đã có css .hidden
-                        el.textContent = 0;
-                    } else {
-                        el.classList.remove('hidden');
-                        el.textContent = count;
-                    }
-                });
-            })
-            .catch(err => console.error('[cart] Không thể lấy count', err));
-    }
-
-    // gọi khi DOM sẵn sàng
-    document.addEventListener('DOMContentLoaded', function() {
-        updateCartCount();
-    });
-    document.addEventListener("DOMContentLoaded", function() {
-
-        function setupRowPagination(containerId) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-
-            function attachPagination() {
-                container.querySelectorAll(".grid-pagination button").forEach(btn => {
-                    btn.onclick = function(e) {
-                        e.preventDefault();
-                        const url = this.getAttribute("data-url");
-                        if (!url) return;
-
-                        // slide out current
-                        container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-                        container.style.transform = 'translateX(-100%)';
-                        container.style.opacity = 0;
-
-                        fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
-                            .then(res => res.text())
-                            .then(html => {
-                                const tempDiv = document.createElement('div');
-                                tempDiv.innerHTML = html;
-
-                                // tìm đúng fragment mới trong response
-                                const newSection = tempDiv.querySelector('#' + containerId);
-                                if (newSection) {
-                                    setTimeout(() => {
-                                        container.innerHTML = newSection.innerHTML;
-
-                                        // slide in
-                                        container.style.transform = 'translateX(100%)';
-                                        container.style.opacity = 0;
-                                        requestAnimationFrame(() => {
-                                            container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-                                            container.style.transform = 'translateX(0)';
-                                            container.style.opacity = 1;
-                                        });
-
-                                        // attach listener cho button mới
-                                        attachPagination();
-
-                                        // update URL để giữ lịch sử
-                                        history.pushState(null, '', url);
-                                    }, 300);
-                                }
-                            })
-                            .catch(err => console.error('AJAX pagination error:', err));
-                    };
-                });
-            }
-
-            attachPagination();
-        }
-
-        // gọi cho cả 3 row
-        setupRowPagination('product-grid-new');
-        setupRowPagination('product-grid-sale');
-        setupRowPagination('product-grid-hot');
-
-    });
-</script>
-
-<script>
-    // Change sort function
-    function changeSort() {
-        const sort = document.getElementById('sortSelect').value;
-        window.location.href = '/orders?status=delivered&sort=' + sort;
-    }
-
-    // Show confirmation modal
-    function showConfirmModal(orderId, orderNumber, totalAmount) {
-        document.getElementById('confirmOrderId').value = orderId;
-        document.getElementById('modalOrderNumber').textContent = orderNumber;
-        document.getElementById('modalTotalAmount').textContent = totalAmount;
-
-        const modal = document.getElementById('confirmModal');
-        modal.style.display = 'block';
-    }
-
-    // Close confirmation modal
-    function closeConfirmModal() {
-        const modal = document.getElementById('confirmModal');
-        modal.style.display = 'none';
-    }
-
-    // Close modal when clicking outside
-    window.onclick = function(event) {
-        const modal = document.getElementById('confirmModal');
-        if (event.target === modal) {
-            closeConfirmModal();
-        }
-    }
-
-    // Close modal with ESC key
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            closeConfirmModal();
-        }
-    });
-</script>
-
-<script>
-    let cancelOrderId = null;
-
-    function showCancelModal(orderId){
-        cancelOrderId = orderId;
-        document.getElementById('cancelModal').style.display = 'block';
-    }
-
-    function closeCancelModal(){
-        cancelOrderId = null;
-        document.getElementById('cancelModal').style.display = 'none';
-        document.getElementById('cancelReason').value = '';
-    }
-
-    function confirmCancel(){
-        const reason = document.getElementById('cancelReason').value.trim();
-        if(!reason){
-            alert('Vui lòng nhập lý do hủy đơn.');
-            return;
-        }
-        // Gán giá trị vào input trong form tương ứng
-        document.getElementById('reasonInput_' + cancelOrderId).value = reason;
-        // Submit form
-        document.getElementById('cancelForm_' + cancelOrderId).submit();
-        closeCancelModal();
-    }
-
     function changeSort(){
         const sort = document.getElementById('sortSelect').value;
         const url = new URL(window.location.href);
         url.searchParams.set('sort', sort);
         window.location.href = url.toString();
     }
-
-    window.onclick = function(event){
-        const modal = document.getElementById('cancelModal');
-        if(event.target == modal) closeCancelModal();
-    }
 </script>
+
+<footer>
+    <div th:replace="~{fragments/fragments :: footer}"></div>
+</footer>
 </body>
 </html>

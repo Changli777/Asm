@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý đơn hàng - Admin</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      flex: 1; /* chiếm toàn bộ không gian còn lại */
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    footer {
+      margin-top: auto; /* đẩy footer xuống cuối */
+    }
+
+    .page-header {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .page-header h1 {
+      color: #333;
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    /* Filter tabs */
+    .filter-tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .filter-tab {
+      padding: 10px 20px;
+      background: #fff;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+    }
+
+    .filter-tab:hover {
+      border-color: #4CAF50;
+      transform: translateY(-2px);
+    }
+
+    .filter-tab.active {
+      background: #4CAF50;
+      color: white;
+      border-color: #4CAF50;
+    }
+
+    .filter-tab .count {
+      background: rgba(0,0,0,0.1);
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-left: 8px;
+      font-size: 12px;
+    }
+
+    /* Orders table */
+    .orders-container {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .orders-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .orders-table thead {
+      background: #f8f9fa;
+    }
+
+    .orders-table th {
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+      color: #555;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .orders-table td {
+      padding: 15px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
+    }
+
+    .orders-table tbody tr {
+      transition: background-color 0.2s ease;
+    }
+
+    .orders-table tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    /* Status badges */
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-confirmed {
+      background: #cfe2ff;
+      color: #084298;
+    }
+
+    .status-shipping {
+      background: #e7f3ff;
+      color: #0066cc;
+    }
+
+    .status-delivered {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .status-completed {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-cancelled {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    /* Action buttons */
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .btn-primary {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #45a049;
+    }
+
+    .btn-info {
+      background: #17a2b8;
+      color: white;
+    }
+
+    .btn-info:hover {
+      background: #138496;
+    }
+
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #218838;
+    }
+
+    .btn-warning {
+      background: #ffc107;
+      color: #333;
+    }
+
+    .btn-warning:hover {
+      background: #e0a800;
+    }
+
+    .btn-view {
+      background: #6c757d;
+      color: white;
+    }
+
+    .btn-view:hover {
+      background: #5a6268;
+    }
+
+    /* Order details in cell */
+    .order-number {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .order-date {
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
+
+    .customer-info {
+      font-size: 14px;
+    }
+
+    .customer-name {
+      font-weight: 500;
+      color: #333;
+    }
+
+    .customer-phone {
+      font-size: 12px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .amount {
+      font-weight: 600;
+      color: #4CAF50;
+      font-size: 15px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+
+    .empty-state img {
+      width: 150px;
+      opacity: 0.5;
+      margin-bottom: 20px;
+    }
+
+    /* Confirmation checkboxes */
+    .confirmation-info {
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    .confirmation-info span {
+      display: inline-block;
+      margin-right: 10px;
+    }
+
+    .confirmed {
+      color: #28a745;
+    }
+
+    .not-confirmed {
+      color: #dc3545;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .pagination button {
+      padding: 10px 15px;
+      background: #fff;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      border-color: #4CAF50;
+      color: #4CAF50;
+    }
+
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pagination .current-page {
+      font-weight: 600;
+      padding: 10px 15px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .orders-table {
+        font-size: 14px;
+      }
+
+      .orders-table th,
+      .orders-table td {
+        padding: 10px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .filter-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      }
+
+      .orders-table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div th:replace="~{fragments/fragments :: header}"></div>
+
+<div class="container">
+  <div class="page-header">
+    <h1>📦 Quản lý đơn hàng</h1>
+    <p>Theo dõi và xử lý tất cả đơn hàng của khách hàng</p>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="filter-tabs">
+    <div class="filter-tab" th:classappend="${currentStatus == null || currentStatus == ''} ? 'active' : ''"
+         onclick="filterOrders('')">
+      Tất cả
+      <span class="count" th:text="${totalCount}">0</span>
+    </div>
+    <div class="filter-tab" th:classappend="${currentStatus == 'Pending'} ? 'active' : ''"
+         onclick="filterOrders('Pending')">
+      Chờ xác nhận
+      <span class="count" th:text="${pendingCount}">0</span>
+    </div>
+    <div class="filter-tab" th:classappend="${currentStatus == 'Confirmed'} ? 'active' : ''"
+         onclick="filterOrders('Confirmed')">
+      Đã xác nhận
+      <span class="count" th:text="${confirmedCount}">0</span>
+    </div>
+    <div class="filter-tab" th:classappend="${currentStatus == 'Shipping'} ? 'active' : ''"
+         onclick="filterOrders('Shipping')">
+      Đang giao
+      <span class="count" th:text="${shippingCount}">0</span>
+    </div>
+    <div class="filter-tab" th:classappend="${currentStatus == 'Delivered'} ? 'active' : ''"
+         onclick="filterOrders('Delivered')">
+      Đã giao
+      <span class="count" th:text="${deliveredCount}">0</span>
+    </div>
+    <div class="filter-tab" th:classappend="${currentStatus == 'Completed'} ? 'active' : ''"
+         onclick="filterOrders('Completed')">
+      Hoàn thành
+      <span class="count" th:text="${completedCount}">0</span>
+    </div>
+    <div class="filter-tab" th:classappend="${currentStatus == 'Cancelled'} ? 'active' : ''"
+         onclick="filterOrders('Cancelled')">
+      Đã hủy
+      <span class="count" th:text="${cancelledCount}">0</span>
+    </div>
+  </div>
+
+  <!-- Orders Table -->
+  <div class="orders-container">
+    <table class="orders-table" th:if="${orders != null && !orders.isEmpty()}">
+      <thead>
+      <tr>
+        <th>Mã đơn</th>
+        <th>Khách hàng</th>
+        <th>Tổng tiền</th>
+        <th>Trạng thái</th>
+        <th>Ngày đặt</th>
+        <th>Xác nhận</th>
+        <th>Thao tác</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="order : ${orders}">
+        <td>
+          <div class="order-number" th:text="${order.orderNumber}">ORD-001</div>
+          <div class="order-date" th:text="${order.orderDate}">01/01/2024</div>
+        </td>
+        <td>
+          <div class="customer-info">
+            <div class="customer-name" th:text="${order.shippingFullName}">Nguyễn Văn A</div>
+            <div class="customer-phone" th:text="${order.shippingPhone}">0901234567</div>
+          </div>
+        </td>
+        <td>
+          <div class="amount" th:text="${order.getTotal() != null && order.getDiscountAmount() != null ? order.getTotal().subtract(order.getDiscountAmount()) + '₫' : '0₫'}"></div>
+        </td>
+        <td>
+          <span class="status-badge" th:switch="${order.status}">
+    <span th:case="'Pending'" class="status-pending">Chờ xác nhận</span>
+    <span th:case="'Confirmed'" class="status-confirmed">Đã xác nhận</span>
+    <span th:case="'Shipping'" class="status-shipping">Đang giao</span>
+    <span th:case="'Delivered'" class="status-delivered">Đã giao</span>
+    <span th:case="'Completed'" class="status-completed">Hoàn thành</span>
+    <span th:case="* " class="status-cancelled">Đã hủy</span>
+</span>
+
+
+        </td>
+        <td th:text="${order.orderDate}">01/01/2024</td>
+        <td>
+          <div class="confirmation-info" th:if="${order.status == 'Delivered' || order.status == 'Completed'}">
+                            <span th:classappend="${order.customerConfirmed} ? 'confirmed' : 'not-confirmed'">
+                                KH: <span th:text="${order.customerConfirmed} ? '✓' : '✗'">✗</span>
+                            </span>
+            <span th:classappend="${order.adminConfirmed} ? 'confirmed' : 'not-confirmed'">
+                                Admin: <span th:text="${order.adminConfirmed} ? '✓' : '✗'">✗</span>
+                            </span>
+          </div>
+          <span th:unless="${order.status == 'Delivered' || order.status == 'Completed'}">-</span>
+        </td>
+        <td>
+          <div class="action-buttons">
+            <!-- Xem chi tiết -->
+            <button class="btn btn-view" onclick="viewOrder(this)"
+                    th:attr="data-order-id=${order.orderId}">
+              👁️ Xem
+            </button>
+
+            <!-- Pending -> Confirmed -->
+            <button class="btn btn-primary"
+                    th:if="${order.status == 'Pending'}"
+                    onclick="confirmOrder(this)"
+                    th:attr="data-order-id=${order.orderId}">
+              ✓ Xác nhận
+            </button>
+
+            <!-- Confirmed -> Shipping -->
+            <button class="btn btn-info"
+                    th:if="${order.status == 'Confirmed'}"
+                    onclick="startShipping(this)"
+                    th:attr="data-order-id=${order.orderId}">
+              🚚 Giao hàng
+            </button>
+
+            <!-- Shipping -> Delivered -->
+            <button class="btn btn-success"
+                    th:if="${order.status == 'Shipping'}"
+                    onclick="markDelivered(this)"
+                    th:attr="data-order-id=${order.orderId}">
+              ✓ Đã giao
+            </button>
+
+            <!-- Delivered: Admin xác nhận nhận tiền -->
+            <button class="btn btn-warning"
+                    th:if="${order.status == 'Delivered' and order.adminConfirmed != true}"
+                    onclick="adminConfirmPayment(this)"
+                    th:attr="data-order-id=${order.orderId}">
+              💰 Đã nhận tiền
+            </button>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty state -->
+    <div class="empty-state" th:if="${orders == null || orders.isEmpty()}">
+      <div style="font-size: 60px;">📦</div>
+      <h3>Không có đơn hàng nào</h3>
+      <p>Chưa có đơn hàng nào trong danh mục này</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script th:inline="javascript">
+  const currentStatusFilter = /*[[${currentStatus}]]*/ '';
+
+  function filterOrders(status) {
+    window.location.href = `/admin/orders?status=${status}`;
+  }
+
+  function goToPage(page) {
+    const status = currentStatusFilter || '';
+    window.location.href = `/admin/orders?status=${status}&page=${page}`;
+  }
+
+  function viewOrder(btn) {
+    const orderId = btn.getAttribute('data-order-id');
+    window.location.href = `/detail/${orderId}`;
+  }
+
+  function confirmOrder(btn) {
+    const orderId = btn.getAttribute('data-order-id');
+
+    Swal.fire({
+      title: 'Xác nhận đơn hàng?',
+      text: 'Bạn có chắc muốn xác nhận đơn hàng này?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Xác nhận',
+      cancelButtonText: 'Hủy',
+      confirmButtonColor: '#4CAF50'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        updateOrderStatus(orderId, 'confirm');
+      }
+    });
+  }
+
+  function startShipping(btn) {
+    const orderId = btn.getAttribute('data-order-id');
+
+    Swal.fire({
+      title: 'Bắt đầu giao hàng?',
+      text: 'Đơn hàng sẽ chuyển sang trạng thái đang giao',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Bắt đầu',
+      cancelButtonText: 'Hủy',
+      confirmButtonColor: '#17a2b8'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        updateOrderStatus(orderId, 'ship');
+      }
+    });
+  }
+
+  function markDelivered(btn) {
+    const orderId = btn.getAttribute('data-order-id');
+
+    Swal.fire({
+      title: 'Đã giao hàng thành công?',
+      text: 'Xác nhận đã giao hàng cho khách',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Đã giao',
+      cancelButtonText: 'Hủy',
+      confirmButtonColor: '#28a745'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        updateOrderStatus(orderId, 'deliver');
+      }
+    });
+  }
+
+  function adminConfirmPayment(btn) {
+    const orderId = btn.getAttribute('data-order-id');
+
+    Swal.fire({
+      title: 'Xác nhận đã nhận tiền?',
+      text: 'Bạn đã nhận được tiền từ khách hàng?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Đã nhận',
+      cancelButtonText: 'Hủy',
+      confirmButtonColor: '#ffc107'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        updateOrderStatus(orderId, 'admin-confirm-payment');
+      }
+    });
+  }
+
+  function updateOrderStatus(orderId, action) {
+    fetch(`/admin/orders/${orderId}/${action}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Thành công!',
+                  text: data.message,
+                  showConfirmButton: false,
+                  timer: 1500
+                }).then(() => {
+                  location.reload();
+                });
+              } else {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Thất bại!',
+                  text: data.message,
+                  confirmButtonText: 'OK'
+                });
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              Swal.fire({
+                icon: 'error',
+                title: 'Lỗi!',
+                text: 'Có lỗi xảy ra, vui lòng thử lại',
+                confirmButtonText: 'OK'
+              });
+            });
+  }
+</script>
+
+<div th:if="${message}">
+  <script th:inline="javascript">
+    Swal.fire({
+      icon: 'success',
+      title: 'Thành công!',
+      text: [[${message}]],
+      showConfirmButton: false,
+      timer: 1800
+    });
+  </script>
+</div>
+
+<div th:if="${error}">
+  <script th:inline="javascript">
+    Swal.fire({
+      icon: 'error',
+      title: 'Thất bại!',
+      text: [[${error}]],
+      confirmButtonText: 'OK'
+    });
+  </script>
+</div>
+
+<!-- Overlay & panel -->
+<div id="cart-overlay" class="hidden"></div>
+<div id="cart-panel" class="hidden"></div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    console.log("[cart] Ready");
+
+    const overlay = document.getElementById("cart-overlay");
+    const panel = document.getElementById("cart-panel");
+
+    // khi click icon giỏ hàng trong header
+    document.body.addEventListener("click", function(e) {
+      const icon = e.target.closest(".cart-icon-header");
+      if (!icon) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      console.log("[cart] Icon clicked, loading fragment...");
+
+      fetch("/cart")
+              .then(res => res.text())
+              .then(html => {
+                panel.innerHTML = html;
+                overlay.classList.remove("hidden");
+                panel.classList.remove("hidden");
+                requestAnimationFrame(() => {
+                  overlay.classList.add("show");
+                  panel.classList.add("show");
+                });
+              })
+              .catch(err => console.error("[cart] Lỗi khi load fragment:", err));
+    });
+
+    // đóng khi click ra ngoài
+    overlay.addEventListener("click", closeCart);
+
+    // đóng khi bấm nút X
+    panel.addEventListener("click", e => {
+      if (e.target.classList.contains("cart-close-btn") || e.target.classList.contains("close-cart")) {
+        closeCart();
+      }
+    });
+
+    // ESC để đóng
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeCart();
+    });
+
+    function closeCart() {
+      overlay.classList.remove("show");
+      panel.classList.remove("show");
+      setTimeout(() => {
+        overlay.classList.add("hidden");
+        panel.classList.add("hidden");
+      }, 300);
+    }
+  });
+  // gọi khi trang load
+  function updateCartCount() {
+    fetch("/cart/count")
+            .then(res => res.text())
+            .then(count => {
+              // cập nhật tất cả các phần tử .cart-count-badge trên trang
+              document.querySelectorAll('.cart-count-badge').forEach(el => {
+                // nếu server trả 0 và bạn muốn ẩn badge khi 0
+                if (Number(count) <= 0) {
+                  el.classList.add('hidden');  // bạn đã có css .hidden
+                  el.textContent = 0;
+                } else {
+                  el.classList.remove('hidden');
+                  el.textContent = count;
+                }
+              });
+            })
+            .catch(err => console.error('[cart] Không thể lấy count', err));
+  }
+
+  // gọi khi DOM sẵn sàng
+  document.addEventListener('DOMContentLoaded', function() {
+    updateCartCount();
+  });
+  document.addEventListener("DOMContentLoaded", function() {
+
+    function setupRowPagination(containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      function attachPagination() {
+        container.querySelectorAll(".grid-pagination button").forEach(btn => {
+          btn.onclick = function(e) {
+            e.preventDefault();
+            const url = this.getAttribute("data-url");
+            if (!url) return;
+
+            // slide out current
+            container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+            container.style.transform = 'translateX(-100%)';
+            container.style.opacity = 0;
+
+            fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+                    .then(res => res.text())
+                    .then(html => {
+                      const tempDiv = document.createElement('div');
+                      tempDiv.innerHTML = html;
+
+                      // tìm đúng fragment mới trong response
+                      const newSection = tempDiv.querySelector('#' + containerId);
+                      if (newSection) {
+                        setTimeout(() => {
+                          container.innerHTML = newSection.innerHTML;
+
+                          // slide in
+                          container.style.transform = 'translateX(100%)';
+                          container.style.opacity = 0;
+                          requestAnimationFrame(() => {
+                            container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                            container.style.transform = 'translateX(0)';
+                            container.style.opacity = 1;
+                          });
+
+                          // attach listener cho button mới
+                          attachPagination();
+
+                          // update URL để giữ lịch sử
+                          history.pushState(null, '', url);
+                        }, 300);
+                      }
+                    })
+                    .catch(err => console.error('AJAX pagination error:', err));
+          };
+        });
+      }
+
+      attachPagination();
+    }
+
+    // gọi cho cả 3 row
+    setupRowPagination('product-grid-new');
+    setupRowPagination('product-grid-sale');
+    setupRowPagination('product-grid-hot');
+
+  });
+</script>
+
+<footer>
+  <div th:replace="~{fragments/fragments :: footer}"></div>
+</footer>
+
+</body>
+</html>

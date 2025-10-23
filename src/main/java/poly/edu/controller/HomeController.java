@@ -25,15 +25,41 @@ public class HomeController {
     private ProductDAO productDAO;
 
     // Link: http://localhost:8080/home
-
     @GetMapping("/home")
     public String home(
             @RequestParam(value = "newPage", required = false) Integer newPageParam,
             @RequestParam(value = "salePage", required = false) Integer salePageParam,
             @RequestParam(value = "hotPage", required = false) Integer hotPageParam,
+            // 🟢 Thêm 3 tham số tìm kiếm
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "categoryId", required = false) Long categoryId,
+            @RequestParam(value = "minPrice", required = false) Double minPrice,
+            @RequestParam(value = "maxPrice", required = false) Double maxPrice,
             Model model
     ) {
         try {
+            // 🟢 0. Kiểm tra nếu có tìm kiếm
+            boolean hasSearch = (keyword != null && !keyword.isEmpty())
+                    || categoryId != null
+                    || (minPrice != null && maxPrice != null);
+
+            if (hasSearch) {
+                List<Product> results = productDAO.searchProducts(keyword, categoryId, minPrice, maxPrice);
+
+                if (results.isEmpty()) {
+                    model.addAttribute("message", "Không tìm thấy sản phẩm phù hợp.");
+                }
+
+                model.addAttribute("searchResults", results);
+                model.addAttribute("categories", categoryDAO.findAll());
+                model.addAttribute("keyword", keyword);
+                model.addAttribute("selectedCategoryId", categoryId);
+                model.addAttribute("minPrice", minPrice);
+                model.addAttribute("maxPrice", maxPrice);
+
+                return "home";
+            }
+
             // 1. load categories
             List<Category> categories = categoryDAO.findAll();
             model.addAttribute("categories", categories);
@@ -74,14 +100,14 @@ public class HomeController {
             salePage = normalizePage(salePage, totalSalePages);
             hotPage = normalizePage(hotPage, totalHotPages);
 
-            String newPrevUrl  = buildUrl("newPage",  prevOf(newPage, totalNewPages), "salePage", salePage, "hotPage", hotPage);
-            String newNextUrl  = buildUrl("newPage",  nextOf(newPage, totalNewPages), "salePage", salePage, "hotPage", hotPage);
+            String newPrevUrl = buildUrl("newPage", prevOf(newPage, totalNewPages), "salePage", salePage, "hotPage", hotPage);
+            String newNextUrl = buildUrl("newPage", nextOf(newPage, totalNewPages), "salePage", salePage, "hotPage", hotPage);
 
             String salePrevUrl = buildUrl("newPage", newPage, "salePage", prevOf(salePage, totalSalePages), "hotPage", hotPage);
             String saleNextUrl = buildUrl("newPage", newPage, "salePage", nextOf(salePage, totalSalePages), "hotPage", hotPage);
 
-            String hotPrevUrl  = buildUrl("newPage", newPage, "salePage", salePage, "hotPage", prevOf(hotPage, totalHotPages));
-            String hotNextUrl  = buildUrl("newPage", newPage, "salePage", salePage, "hotPage", nextOf(hotPage, totalHotPages));
+            String hotPrevUrl = buildUrl("newPage", newPage, "salePage", salePage, "hotPage", prevOf(hotPage, totalHotPages));
+            String hotNextUrl = buildUrl("newPage", newPage, "salePage", salePage, "hotPage", nextOf(hotPage, totalHotPages));
 
             // 7. put into model
             model.addAttribute("newProductsPage", newPageItems);
@@ -95,7 +121,6 @@ public class HomeController {
             model.addAttribute("hotPrevUrl", hotPrevUrl);
             model.addAttribute("hotNextUrl", hotNextUrl);
 
-            // also add current page numbers and totals optionally (for debugging or UI)
             model.addAttribute("newPageCurrent", newPage);
             model.addAttribute("salePageCurrent", salePage);
             model.addAttribute("hotPageCurrent", hotPage);
@@ -112,17 +137,14 @@ public class HomeController {
     }
 
     // ---------- helper methods ----------
-
     private List<Product> circularPage(List<Product> all, int requestedPage, int pageSize) {
         List<Product> result = new ArrayList<>();
         if (all == null || all.isEmpty()) {
             return result;
         }
-
         int total = all.size();
         int totalPages = computeTotalPages(total, pageSize);
         int page = normalizePage(requestedPage, totalPages); // ensure 1..totalPages
-
         int startIndex = (page - 1) * pageSize; // 0-based
         for (int i = 0; i < pageSize; i++) {
             int idx = (startIndex + i) % total; // circular index

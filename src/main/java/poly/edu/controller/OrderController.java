@@ -27,7 +27,7 @@ public class OrderController {
     @Autowired
     private SessionService sessionService;
 
-    // ============ TRANG PENDING/CANCELLED ORDERS ============
+    // ============ TRANG TRẠNG THÁI ORDERS ============
     @GetMapping("/orders")
     public String viewOrders(
             @RequestParam(defaultValue = "pending") String status,
@@ -71,11 +71,14 @@ public class OrderController {
             return "orders/shipping-orders";
         } else if ("delivered".equalsIgnoreCase(status)) {
             return "orders/delivered-orders";
+        } else if ("confirmed".equalsIgnoreCase(status)) {
+            return "orders/confirmed-orders";
         }
 
         // Mặc định là pending-orders.html
         return "orders/pending-orders";
     }
+
 
     // ============ TRANG CHI TIẾT ĐƠN HÀNG ============
     @GetMapping("/detail/{orderId}")
@@ -154,4 +157,27 @@ public class OrderController {
         String referer = request.getHeader("Referer");
         return "redirect:" + (referer != null ? referer : "/orders?status=pending");
     }
+
+
+    @PostMapping("/orders/confirm-received")
+    public String confirmReceived(@RequestParam("orderId") Long orderId, RedirectAttributes redirectAttributes) {
+        // Lấy order từ DB
+        Order order = orderService.findById(orderId);
+        if (order == null) {
+            redirectAttributes.addFlashAttribute("error", "Đơn hàng không tồn tại.");
+            return "redirect:/orders";
+        }
+
+        // Đánh dấu khách hàng đã xác nhận
+        order.setCustomerConfirmed(true);
+
+        // Chỉ cập nhật trạng thái sang Completed khi admin_confirmed = true và customer_confirmed = true
+        if (Boolean.TRUE.equals(order.getAdminConfirmed()) && Boolean.TRUE.equals(order.getCustomerConfirmed())) {
+            order.setStatus("Completed");
+        }
+        orderService.save(order);
+        redirectAttributes.addFlashAttribute("success", "Đơn hàng " + order.getOrderNumber() + " đã được xác nhận.");
+        return "redirect:/orders";
+    }
+
 }

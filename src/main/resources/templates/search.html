@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Kết quả tìm kiếm - Shopii</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css" />
+
+  <style>
+    /* ================================================= */
+    /* SỬA LỖI FOOTER: DÙNG FLEXBOX CHO BODY */
+    /* ================================================= */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* Đảm bảo HTML và BODY chiếm toàn bộ chiều cao màn hình */
+    html, body {
+      height: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      color: #222;
+      /* Thêm thuộc tính Flexbox cho body */
+      display: flex;
+      flex-direction: column;
+    }
+
+    a { color: #0d6efd; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Container chính chứa nội dung (trừ header/footer) phải có flex: 1 để kéo giãn */
+    .main-content-wrapper {
+      flex: 1; /* Kéo giãn khu vực nội dung */
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 24px;
+      width: 100%;
+    }
+
+    /* ĐÃ SỬA: THÊM margin-top ĐỂ TẠO KHOẢNG CÁCH VỚI THANH TÌM KIẾM */
+    .result-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 22px;
+      box-shadow: 0 6px 18px rgba(25, 25, 25, 0.06);
+      /* DÒNG ĐÃ THÊM */
+      margin-top: 20px;
+    }
+
+    /* Đổi tên class container cũ thành .content-inner để chứa các phần bên trong */
+    .content-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0; /* Đã có padding ở .main-content-wrapper */
+    }
+
+    footer {
+      /* Bỏ margin-top: auto vì flexbox đã xử lý việc đẩy xuống */
+      margin-top: 0;
+    }
+
+    /* ========== CART OVERLAY + PANEL (Giữ nguyên) ========== */
+    #cart-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 1200;
+    }
+    #cart-overlay.hidden {
+      display: none;
+    }
+    #cart-overlay.show {
+      opacity: 1;
+    }
+    #cart-panel {
+      position: fixed;
+      top: 0;
+      right: -420px;
+      width: 400px;
+      height: 100%;
+      background: #fff;
+      box-shadow: -5px 0 15px rgba(0,0,0,0.25);
+      overflow-y: auto;
+      transition: right 0.3s ease;
+      z-index: 1250;
+      padding: 20px;
+    }
+    #cart-panel.hidden {
+      display: none;
+    }
+    #cart-panel.show {
+      right: 0;
+    }
+    .cart-close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: transparent;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div th:replace="~{fragments/fragments :: header}"></div>
+
+<div class="main-content-wrapper">
+  <div class="content-inner"> <div th:replace="~{fragments/fragments :: searchFilter}"></div>
+
+    <div class="result-card">
+      <h2>Kết quả tìm kiếm</h2>
+
+      <div th:if="${#lists.isEmpty(results)}" class="no-result">
+        Không tìm thấy sản phẩm nào.
+      </div>
+
+      <div th:unless="${#lists.isEmpty(results)}">
+        <div th:replace="~{fragments/productGrid :: productGrid(
+                    products=${results},
+                    sectionTitle='',
+                    prevUrl=null,
+                    nextUrl=null,
+                    sectionId='search'
+                )}"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="cart-overlay" class="hidden"></div>
+<div id="cart-panel" class="hidden"></div>
+
+<footer>
+  <div th:replace="~{fragments/fragments :: footer}"></div>
+</footer>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    console.log("[cart] Ready");
+
+    const overlay = document.getElementById("cart-overlay");
+    const panel = document.getElementById("cart-panel");
+
+    // khi click icon giỏ hàng trong header
+    document.body.addEventListener("click", function(e) {
+      const icon = e.target.closest(".cart-icon-header");
+      if (!icon) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      console.log("[cart] Icon clicked, loading fragment...");
+
+      fetch("/cart")
+              .then(res => res.text())
+              .then(html => {
+                panel.innerHTML = html;
+                overlay.classList.remove("hidden");
+                panel.classList.remove("hidden");
+                requestAnimationFrame(() => {
+                  overlay.classList.add("show");
+                  panel.classList.add("show");
+                });
+              })
+              .catch(err => console.error("[cart] Lỗi khi load fragment:", err));
+    });
+
+    // đóng khi click ra ngoài
+    overlay.addEventListener("click", closeCart);
+
+    // đóng khi bấm nút X
+    panel.addEventListener("click", e => {
+      if (e.target.classList.contains("cart-close-btn") || e.target.classList.contains("close-cart")) {
+        closeCart();
+      }
+    });
+
+    // ESC để đóng
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeCart();
+    });
+
+    function closeCart() {
+      overlay.classList.remove("show");
+      panel.classList.remove("show");
+      setTimeout(() => {
+        overlay.classList.add("hidden");
+        panel.classList.add("hidden");
+      }, 300);
+    }
+  });
+  // gọi khi trang load
+  function updateCartCount() {
+    fetch("/cart/count")
+            .then(res => res.text())
+            .then(count => {
+              // cập nhật tất cả các phần tử .cart-count-badge trên trang
+              document.querySelectorAll('.cart-count-badge').forEach(el => {
+                // nếu server trả 0 và bạn muốn ẩn badge khi 0
+                if (Number(count) <= 0) {
+                  el.classList.add('hidden');  // bạn đã có css .hidden
+                  el.textContent = 0;
+                } else {
+                  el.classList.remove('hidden');
+                  el.textContent = count;
+                }
+              });
+            })
+            .catch(err => console.error('[cart] Không thể lấy count', err));
+  }
+
+  // gọi khi DOM sẵn sàng
+  document.addEventListener('DOMContentLoaded', function() {
+    updateCartCount();
+  });
+  document.addEventListener("DOMContentLoaded", function() {
+
+    function setupRowPagination(containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      function attachPagination() {
+        container.querySelectorAll(".grid-pagination button").forEach(btn => {
+          btn.onclick = function(e) {
+            e.preventDefault();
+            const url = this.getAttribute("data-url");
+            if (!url) return;
+
+            // slide out current
+            container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+            container.style.transform = 'translateX(-100%)';
+            container.style.opacity = 0;
+
+            fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+                    .then(res => res.text())
+                    .then(html => {
+                      const tempDiv = document.createElement('div');
+                      tempDiv.innerHTML = html;
+
+                      // tìm đúng fragment mới trong response
+                      const newSection = tempDiv.querySelector('#' + containerId);
+                      if (newSection) {
+                        setTimeout(() => {
+                          container.innerHTML = newSection.innerHTML;
+
+                          // slide in
+                          container.style.transform = 'translateX(100%)';
+                          container.style.opacity = 0;
+                          requestAnimationFrame(() => {
+                            container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                            container.style.transform = 'translateX(0)';
+                            container.style.opacity = 1;
+                          });
+
+                          // attach listener cho button mới
+                          attachPagination();
+
+                          // update URL để giữ lịch sử
+                          history.pushState(null, '', url);
+                        }, 300);
+                      }
+                    })
+                    .catch(err => console.error('AJAX pagination error:', err));
+          };
+        });
+      }
+
+      attachPagination();
+    }
+
+    // gọi cho cả 3 row
+    setupRowPagination('product-grid-new');
+    setupRowPagination('product-grid-sale');
+    setupRowPagination('product-grid-hot');
+
+  });
+</script>
+
+<script src="/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
