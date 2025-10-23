@@ -44,10 +44,10 @@ public class Order {
     @Column(name = "shipping_full_name", nullable = false, length = 100)
     private String shippingFullName;
 
-    @Column(name = "shipping_phone", nullable = false, length = 20)
+    @Column(name = "shipping_phone", length = 20)
     private String shippingPhone;
 
-    @Column(name = "shipping_address", nullable = false, length = 500)
+    @Column(name = "shipping_address" , length = 500)
     private String shippingAddress;
 
     @Column(name = "shipping_notes", length = 500)

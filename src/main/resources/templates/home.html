@@ -94,25 +94,44 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- ✅ THÔNG BÁO THÀNH CÔNG -->
     <div th:if="${message}">
         <script th:inline="javascript">
             Swal.fire({
                 icon: 'success',
-                title: 'Thành công!',
+                title: '🎉 Thành công!',
                 text: [[${message}]],
                 showConfirmButton: false,
-                timer: 1800
+                timer: 2000,
+                timerProgressBar: true,
+                background: '#ffffff',
+                color: '#333',
+                showClass: {
+                    popup: 'animate__animated animate__fadeInUp animate__faster'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutDown animate__faster'
+                }
             });
         </script>
     </div>
 
+    <!-- ❌ THÔNG BÁO LỖI -->
     <div th:if="${error}">
         <script th:inline="javascript">
             Swal.fire({
                 icon: 'error',
-                title: 'Thất bại!',
+                title: '❌ Thất bại!',
                 text: [[${error}]],
-                showConfirmButton: true
+                showConfirmButton: true,
+                background: '#fff5f5',
+                color: '#d33',
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown animate__faster'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp animate__faster'
+                }
             });
         </script>
     </div>

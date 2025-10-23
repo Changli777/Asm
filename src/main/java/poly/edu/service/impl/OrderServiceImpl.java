@@ -7,6 +7,7 @@ import poly.edu.dao.OrderDAO;
 import poly.edu.entity.Order;
 import poly.edu.entity.User;
 import poly.edu.service.OrderService;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +23,6 @@ public class OrderServiceImpl implements OrderService {
         if ("oldest".equalsIgnoreCase(sort)) {
             return orderDAO.findByStatusAndUserOrderByCreatedAtAsc(status, user);
         }
-        // Default: newest
         return orderDAO.findByStatusAndUserOrderByCreatedAtDesc(status, user);
     }
 
@@ -35,11 +35,8 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public boolean cancelOrder(Long orderId, User user, String reason) {
         Optional<Order> optionalOrder = orderDAO.findByOrderIdAndUser(orderId, user);
-
         if (optionalOrder.isPresent()) {
             Order order = optionalOrder.get();
-
-            // Chỉ cho phép hủy nếu status = Pending
             if ("Pending".equalsIgnoreCase(order.getStatus())) {
                 order.setStatus("Cancelled");
                 order.setCancelledDate(new Date());
