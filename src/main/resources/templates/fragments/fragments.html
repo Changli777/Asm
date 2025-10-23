@@ -11,9 +11,6 @@
         <div class="navbar-header-container">
             <a th:href="@{/home}" class="logo-header">Shopii</a>
 
-            <div class="search-category-section">
-            </div>
-
             <div class="nav-menu-section">
                 <div th:if="${session.currentUser == null}" class="auth-section">
                     <div class="auth-buttons-header">
@@ -49,6 +46,7 @@
                             <a href="javascript:void(0)" class="menu-link-header">Đơn hàng ▼</a>
                             <div class="dropdown-content-header">
                                 <a th:href="@{/orders?status=pending}">Chờ xác nhận</a>
+                                <a th:href="@{/orders?status=confirmed}">Chờ giao hàng</a>
                                 <a th:href="@{/orders?status=shipping}">Đang giao</a>
                                 <a th:href="@{/orders?status=delivered}">Đã giao</a>
                                 <a th:href="@{/orders?status=cancelled}">Đã hủy</a>
@@ -89,6 +87,7 @@
                             <a href="javascript:void(0)" class="menu-link-header">Đơn hàng ▼</a>
                             <div class="dropdown-content-header">
                                 <a th:href="@{/orders?status=pending}">Chờ xác nhận</a>
+                                <a th:href="@{/orders?status=confirmed}">Chờ giao hàng</a>
                                 <a th:href="@{/orders?status=shipping}">Đang giao</a>
                                 <a th:href="@{/orders?status=delivered}">Đã giao</a>
                                 <a th:href="@{/orders?status=cancelled}">Đã hủy</a>

@@ -3,6 +3,7 @@ package poly.edu.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import poly.edu.dao.OrderDAO;
 import poly.edu.entity.Order;
 import poly.edu.entity.User;
@@ -14,6 +15,82 @@ import java.util.Optional;
 
 @Service
 public class OrderServiceImpl implements OrderService {
+    @Override
+    public List<Order> findByStatus(String status) {
+        return orderDAO.findByStatus(status);
+    }
+
+    @Override
+    public Order findById(Long id) {
+        return orderDAO.findById(id).orElse(null);
+    }
+
+    @Override
+    public long countAll() {
+        return orderDAO.count();
+    }
+
+    @Override
+    public void confirmOrder(Order order) {
+        if (!"Pending".equals(order.getStatus())) {
+            throw new RuntimeException("Đơn hàng không ở trạng thái Pending");
+        }
+        order.setStatus("Confirmed");
+        order.setConfirmedDate(new Date());
+        orderDAO.save(order);
+    }
+
+    @Override
+    public void startShipping(Order order) {
+        if (!"Confirmed".equals(order.getStatus())) {
+            throw new RuntimeException("Đơn hàng không ở trạng thái Confirmed");
+        }
+        order.setStatus("Shipping");
+        order.setShippedDate(new Date());
+        orderDAO.save(order);
+    }
+
+    @Override
+    public void markDelivered(Order order) {
+        if (!"Shipping".equals(order.getStatus())) {
+            throw new RuntimeException("Đơn hàng không ở trạng thái Shipping");
+        }
+        order.setStatus("Delivered");
+        order.setDeliveredDate(new Date());
+        orderDAO.save(order);
+    }
+
+    @Override
+    public void adminConfirmPayment(Order order) {
+        if (!"Delivered".equals(order.getStatus())) {
+            throw new RuntimeException("Đơn hàng không ở trạng thái Delivered");
+        }
+        order.setAdminConfirmed(true);
+        if(order.isAdminConfirmed() &&  order.isCustomerConfirmed()) {
+            order.setStatus("Completed");
+        }
+        order.setCompletedDate(new Date());
+        orderDAO.save(order);
+    }
+
+    @Override
+    public void customerConfirmPayment(Order order) {
+        if (!"Delivered".equals(order.getStatus())) {
+            throw new RuntimeException("Đơn hàng không ở trạng thái Delivered");
+        }
+        order.setCustomerConfirmed(true);
+        if(order.isAdminConfirmed() &&  order.isCustomerConfirmed()) {
+            order.setStatus("Completed");
+        }
+        order.setCompletedDate(new Date());
+        orderDAO.save(order);
+    }
+
+
+    @Override
+    public List<Order> findAll() {
+        return orderDAO.findAll();
+    }
 
     @Autowired
     private OrderDAO orderDAO;
@@ -53,8 +130,4 @@ public class OrderServiceImpl implements OrderService {
         return orderDAO.save(order);
     }
 
-    @Override
-    public Optional<Order> findByOrderNumber(String orderNumber) {
-        return orderDAO.findByOrderNumber(orderNumber);
-    }
 }
