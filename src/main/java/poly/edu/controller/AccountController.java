@@ -6,6 +6,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import poly.edu.entity.User;
 import poly.edu.service.SessionService;
@@ -71,5 +72,41 @@ public class AccountController {
 
         redirectAttributes.addFlashAttribute("success", "Cập nhật thông tin thành công!");
         return "redirect:/account";
+    }
+
+    @GetMapping("/account/change-password")
+    public String changePasswordForm() {
+        return "account/change-password";
+    }
+
+    @PostMapping("/account/change-password")
+    public String changePassword(
+            @RequestParam("currentPassword") String currentPassword,
+            @RequestParam("newPassword") String newPassword,
+            @RequestParam("confirmPassword") String confirmPassword,
+            Model model
+    ) {
+        User user = sessionService.get("currentUser");
+        if (user == null) {
+            model.addAttribute("error", "Vui lòng đăng nhập trước khi đổi mật khẩu.");
+            return "account/change-password";
+        }
+
+        if (!user.getPassword().trim().equals(currentPassword.trim())) {
+            model.addAttribute("error", "Mật khẩu hiện tại không đúng.");
+            return "account/change-password";
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            model.addAttribute("error", "Xác nhận mật khẩu không khớp.");
+            return "account/change-password";
+        }
+
+        user.setPassword(newPassword);
+        userService.update(user);
+        sessionService.set("user", user);
+
+        model.addAttribute("success", "Đổi mật khẩu thành công!");
+        return "account/change-password";
     }
 }

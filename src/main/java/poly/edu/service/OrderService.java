@@ -7,10 +7,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OrderService {
-    List<Order> findByStatusAndUser(String status, User user, String sort);
-    Optional<Order> findByOrderIdAndUser(Long orderId, User user);
-    boolean cancelOrder(Long orderId, User user, String reason);
-    Order save(Order order);
 
     List<Order> findAll();
 

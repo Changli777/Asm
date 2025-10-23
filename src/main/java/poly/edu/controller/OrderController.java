@@ -73,6 +73,8 @@ public class OrderController {
             return "orders/delivered-orders";
         } else if ("confirmed".equalsIgnoreCase(status)) {
             return "orders/confirmed-orders";
+        } else if ("completed".equalsIgnoreCase(status)) {
+            return "orders/completed-orders";
         }
 
         // Mặc định là pending-orders.html
