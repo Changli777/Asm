@@ -24,11 +24,6 @@ public class CRUDUserController {
     // Formatter cho dd/MM/yyyy (theo yêu cầu)
     private static final DateTimeFormatter DOB_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    /**
-     * Hiển thị trang chính /admin/user
-     * - model attributes: users (list), userForm (empty)
-     * - param q: tìm theo username hoặc email hoặc phone (contains)
-     */
     @GetMapping
     public String index(Model model,
                         @RequestParam(value = "q", required = false) String q) {
