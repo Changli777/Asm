@@ -1,14 +1,14 @@
 package poly.edu.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -23,55 +23,40 @@ public class User {
     @Column(name = "user_id")
     private Long userId;
 
-    @NotBlank(message = "Chưa nhập username")
-    @Column(name = "username", nullable = false, unique = true, length = 50)
+    @NotBlank
+    @Column(nullable = false, unique = true)
     private String username;
 
+    @NotBlank
     @Email
-    @NotBlank(message = "Chưa nhập email")
-    @Column(name = "email", nullable = false, unique = true, length = 100)
+    @Column(nullable = false, unique = true)
     private String email;
 
-    @NotBlank(message = "Chưa nhập password")
-    @Column(name = "password", length = 255)
+    @NotBlank
+    @Column(name = "password")
     private String password;
 
-    @NotBlank(message = "Chưa nhập họ tên")
-    @Column(name = "full_name", nullable = false, length = 100)
+    @NotBlank
+    @Column(name = "full_name")
     private String fullName;
 
-    @Column(name = "gender", nullable = false)
     private Boolean gender;
 
-    @NotNull(message = "Chưa nhập ngày sinh")
-    @Past(message = "Ngày sinh không hợp lệ")
-    @DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+    @Past
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     @Column(name = "date_of_birth")
-    private java.time.LocalDate dateOfBirth;
+    private LocalDate dateOfBirth;
 
-    @NotBlank(message = "Chưa nhập số điện thoại")
-    @Column(name = "phone", length = 20)
     private String phone;
-
-    @Column(name = "address", length = 500)
     private String address;
 
-    @Column(name = "role", nullable = false, length = 20)
-    @Builder.Default
-    private String role = "USER";
+    private String provider;
 
-    @Column(name = "provider", length = 20)
-    @Builder.Default
-    private String provider = "LOCAL";
-
-    @Column(name = "provider_id", length = 100)
+    @Column(name = "provider_id")
     private String providerId;
 
-    @Column(name = "password_reset_token", length = 255)
-    private String passwordResetToken;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private java.util.List<CartItem> cartItems = new java.util.ArrayList<>();
+    @OneToMany(mappedBy = "user")
+    private List<UserRole> userRoles;
 
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
@@ -91,3 +76,4 @@ public class User {
         this.updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
     }
 }
+

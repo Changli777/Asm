@@ -158,7 +158,7 @@
 <div class="login-container">
     <div class="logo-section">
         <div class="logo">
-            <a th:href="@{/home}">Shopii</a>
+            <a th:href="@{/}">Shopii</a>
         </div>
         <div class="logo-subtitle">Chào mừng trở lại!</div>
     </div>
@@ -182,6 +182,7 @@
             <div class="form-group">
                 <label class="form-label">Tài khoản</label>
                 <input type="text"
+                       name="username"
                        class="form-input"
                        placeholder="Username, Email hoặc Số điện thoại"
                        th:field="*{username}" />
@@ -192,6 +193,7 @@
                 <label class="form-label">Mật khẩu</label>
                 <div class="password-toggle">
                     <input type="password"
+                           name="password"
                            class="form-input"
                            id="password"
                            placeholder="Nhập mật khẩu"
@@ -219,40 +221,12 @@
 
         <div class="divider"><span>HOẶC</span></div>
 
-        <!-- ✅ GOOGLE LOGIN VỚI REMEMBER ME -->
-        <div class="google-login-section">
-            <div class="remember-me">
-                <input type="checkbox" id="rememberGoogle" />
-                <label for="rememberGoogle">Ghi nhớ đăng nhập Google</label>
-            </div>
-
-            <div id="g_id_onload"
-                 data-client_id="977445546861-a4qd0n7au67tl6cpiip1sb1fcgc0cem0.apps.googleusercontent.com"
-                 data-context="signin"
-                 data-ux_mode="popup"
-                 data-callback="handleCredentialResponse"
-                 data-auto_select="false"
-                 data-itp_support="true">
-            </div>
-
-            <div class="g_id_signin"
-                 data-type="standard"
-                 data-shape="rectangular"
-                 data-theme="outline"
-                 data-text="signin_with"
-                 data-size="large"
-                 data-logo_alignment="left">
-            </div>
-        </div>
-
         <div class="register-link">
             Chưa có tài khoản? <a href="/register">Đăng ký ngay</a>
         </div>
     </div>
 </div>
 
-<!-- Scripts -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
     function togglePassword() {
         const passwordInput = document.getElementById('password');
@@ -284,23 +258,6 @@
         // ✅ Gửi cả credential và remember parameter
         const body = 'credential=' + encodeURIComponent(response.credential) +
             '&remember=' + rememberGoogle;
-
-        fetch('/login/google', {
-            method: 'POST',
-            headers: headers,
-            body: body
-        }).then(res => {
-            if (res.redirected) {
-                window.location.href = res.url;
-            } else if (res.ok) {
-                window.location.href = '/home';
-            } else {
-                alert("Đăng nhập Google thất bại!");
-            }
-        }).catch(err => {
-            console.error(err);
-            alert("Lỗi hệ thống khi đăng nhập Google!");
-        });
     }
 </script>
 </body>

@@ -1,7 +1,7 @@
 package poly.edu.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import poly.edu.dao.PasswordResetTokenDAO;
@@ -26,6 +26,8 @@ public class PasswordResetService {
     @Autowired
     private MailerService mailerService;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder; // 🔥 Thêm password encoder
 
     private String generateOtp() {
         return String.format("%06d", new Random().nextInt(999999));
@@ -36,17 +38,18 @@ public class PasswordResetService {
 
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
-            // 1. Xóa t?t c? token c? c?a user này
+
+            // Xóa toàn bộ token cũ
             tokenDAO.deleteAllByUser(user);
 
-            // 2. T?o mã OTP m?i (6 ch? s?)
+            // Tạo mã OTP
             String otpCode = generateOtp();
-            LocalDateTime expiryDate = LocalDateTime.now().plusMinutes(5); // H?n 5 phút
+            LocalDateTime expiryDate = LocalDateTime.now().plusMinutes(5);
 
             PasswordResetToken token = new PasswordResetToken(user, otpCode, expiryDate);
             tokenDAO.save(token);
 
-            // 3. G?i email OTP
+            // Gửi email OTP
             mailerService.sendOtpEmail(user.getEmail(), otpCode);
 
             return Optional.of(user);
@@ -55,28 +58,36 @@ public class PasswordResetService {
     }
 
     public boolean validateOtp(User user, String otpCode) {
-        Optional<PasswordResetToken> tokenOpt = tokenDAO.findByUserAndTokenCodeAndExpiryDateAfterAndIsUsed(
-                user, otpCode, LocalDateTime.now(), false
-        );
+        Optional<PasswordResetToken> tokenOpt = tokenDAO
+                .findByUserAndTokenCodeAndExpiryDateAfterAndIsUsed(
+                        user,
+                        otpCode,
+                        LocalDateTime.now(),
+                        false
+                );
         return tokenOpt.isPresent();
     }
 
-    /**
-     * ??t l?i m?t kh?u và dánh d?u token là dã dùng.
-     */
     public void resetPassword(User user, String newPassword, String otpCode) {
-        Optional<PasswordResetToken> tokenOpt = tokenDAO.findByUserAndTokenCodeAndExpiryDateAfterAndIsUsed(
-                user, otpCode, LocalDateTime.now(), false
-        );
+
+        Optional<PasswordResetToken> tokenOpt = tokenDAO
+                .findByUserAndTokenCodeAndExpiryDateAfterAndIsUsed(
+                        user,
+                        otpCode,
+                        LocalDateTime.now(),
+                        false
+                );
 
         if (tokenOpt.isEmpty()) {
-            throw new IllegalArgumentException("Mã OTP không hợp lệ, hoặc đã hết hạn !");
+            throw new IllegalArgumentException("Mã OTP không hợp lệ hoặc đã hết hạn!");
         }
 
-        user.setPassword(newPassword);
+        // 🔥 MÃ HÓA PASSWORD MỚI (QUAN TRỌNG!)
+        String hashedPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(hashedPassword);
         userDAO.save(user);
 
-        // Dánh d?u token là dã s? d?ng
+        // Đánh dấu token là đã dùng
         PasswordResetToken token = tokenOpt.get();
         token.setIsUsed(true);
         tokenDAO.save(token);

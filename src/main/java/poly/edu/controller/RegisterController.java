@@ -1,36 +1,33 @@
 package poly.edu.controller;
 
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
+import poly.edu.dao.RoleDAO;
 import poly.edu.dao.UserDAO;
+import poly.edu.dao.UserRoleDAO;
+import poly.edu.entity.Role;
 import poly.edu.entity.User;
-import poly.edu.service.CookieService;
-import poly.edu.service.ParamService;
-import poly.edu.service.SessionService;
+import poly.edu.entity.UserRole;
 
 @Controller
 public class RegisterController {
-
-    //Link: http://localhost:8080/register
 
     @Autowired
     private UserDAO userDAO;
 
     @Autowired
-    private ParamService paramService;
+    private RoleDAO roleDAO;
 
     @Autowired
-    private SessionService sessionService;
+    private UserRoleDAO userRoleDAO;
 
     @Autowired
-    private CookieService cookieService;
+    private PasswordEncoder passwordEncoder;
 
     @GetMapping("/register")
     public String showRegisterForm(Model model) {
@@ -42,43 +39,51 @@ public class RegisterController {
     public String processRegister(
             @Valid @ModelAttribute("user") User user,
             BindingResult bindingResult,
+            @RequestParam("confirmPassword") String confirmPassword,
             Model model
     ) {
-        String confirmPassword = paramService.getString("confirmPassword", "");
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("confirmPasswordError", "");
             return "register";
         }
 
-        // kiểm tra confirm password -> hiển thị bên dưới ô confirmPassword
         if (!user.getPassword().equals(confirmPassword)) {
             model.addAttribute("confirmPasswordError", "Mật khẩu xác nhận không khớp.");
             return "register";
         }
 
-        // ✅ 2. Kiểm tra trùng lặp chi tiết: username/email/phone
-        if (userDAO.findByUsername(user.getUsername()).isPresent()) {
+        if (userDAO.existsByUsername(user.getUsername())) {
             bindingResult.rejectValue("username", "error.username", "Username đã tồn tại.");
             return "register";
         }
-        if (userDAO.findByEmail(user.getEmail()).isPresent()) {
+
+        if (userDAO.existsByEmail(user.getEmail())) {
             bindingResult.rejectValue("email", "error.email", "Email đã tồn tại.");
             return "register";
         }
-        if (user.getPhone() != null && !user.getPhone().isBlank() && userDAO.findByPhone(user.getPhone()).isPresent()) {
-            bindingResult.rejectValue("phone", "error.phone", "Số điện thoại đã tồn tại.");
-            return "register";
-        }
 
-        User savedUser = userDAO.save(user);
+        // Mã hóa mật khẩu
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        sessionService.set("currentUser", savedUser);
+        // Bắt buộc provider = LOCAL
+        user.setProvider("LOCAL");
 
-        try {
-            cookieService.add("username", savedUser.getUsername(), 24);
-        } catch (Exception ignored) {}
+        // Lưu user trước
+        userDAO.save(user);
 
-        return "redirect:/home";
+        // 🚀 Gán ROLE_USER mặc định
+        Role roleUser = roleDAO.findById("USER")
+                .orElseThrow(() -> new RuntimeException("ROLE_USER not found in DB"));
+
+        UserRole ur = UserRole.builder()
+                .user(user)
+                .role(roleUser)
+                .build();
+
+        userRoleDAO.save(ur);
+
+        model.addAttribute("success", "Đăng ký thành công! Vui lòng đăng nhập.");
+
+        return "login"; // redirect:/login cũng được
     }
 }

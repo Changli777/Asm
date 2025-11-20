@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Fragments</title>
@@ -9,10 +9,11 @@
 <div th:fragment="header">
     <nav class="navbar-header">
         <div class="navbar-header-container">
-            <a th:href="@{/home}" class="logo-header">Shopii</a>
+            <a th:href="@{/}" class="logo-header">Shopii</a>
 
             <div class="nav-menu-section">
-                <div th:if="${session.currentUser == null}" class="auth-section">
+                <!-- Nếu chưa đăng nhập -->
+                <div sec:authorize="isAnonymous()" class="auth-section">
                     <div class="auth-buttons-header">
                         <a th:href="@{/login}" class="btn-auth-header btn-login-header">Đăng nhập</a>
                         <a th:href="@{/register}" class="btn-auth-header btn-register-header">Đăng ký</a>
@@ -20,17 +21,19 @@
                     <a th:href="@{/cart}" class="cart-icon-header" aria-label="Giỏ hàng">
                         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="cart-svg" aria-hidden="true">
                             <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45
-                                c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45
-                                c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16
-                                16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                        c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45
+                        c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16
+                        16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
                         </svg>
-                        <span id="cart-count" class="cart-count-badge"
-                              th:text="${session.currentUser != null ? session.cartCount : 0}">0</span>
+                        <span id="cart-count" class="cart-count-badge" th:text="${0}">0</span>
                     </a>
                 </div>
 
-                <div th:if="${session.currentUser != null && session.currentUser.role == 'USER'}" class="user-menu-section">
-                    <div class="welcome-text">Xin chào, <span th:text="${session.currentUser.username}">User</span></div>
+                <!-- Nếu là USER -->
+                <div sec:authorize="hasRole('USER') and !hasRole('ADMIN')" class="user-menu-section">
+                    <div class="welcome-text">
+                        Xin chào, <span sec:authentication="name">User</span>
+                    </div>
 
                     <div class="horizontal-menu">
                         <div class="menu-item-header dropdown-header">
@@ -61,38 +64,42 @@
                     <a th:href="@{/cart}" class="cart-icon-header" aria-label="Giỏ hàng">
                         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="cart-svg" aria-hidden="true">
                             <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45
-                                c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45
-                                c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16
-                                16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                        c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45
+                        c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16
+                        16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
                         </svg>
-                        <span id="cart-count" class="cart-count-badge"
-                              th:text="${session.currentUser != null ? session.cartCount : 0}">0</span>
+                        <span id="cart-count" class="cart-count-badge" th:text="${0}">0</span>
                     </a>
                 </div>
 
-                <div th:if="${session.currentUser != null && session.currentUser.role == 'ADMIN'}" class="admin-menu-section">
-                    <div class="welcome-text">Xin chào, <span th:text="${session.currentUser.username}">Admin</span></div>
+                <!-- Nếu là ADMIN -->
+                <div sec:authorize="hasRole('ADMIN')" class="admin-menu-section">
+                    <div class="welcome-text">
+                        Xin chào, <span sec:authentication="name">Admin</span>
+                    </div>
 
                     <div class="horizontal-menu">
-                        <div class="menu-item-header dropdown-header">
-                            <a href="javascript:void(0)" class="menu-link-header">Tài khoản ▼</a>
-                            <div class="dropdown-content-header">
-                                <a th:href="@{/account}">Thông tin cá nhân</a>
-                                <a th:href="@{/orders?status=completed}">Sản phẩm đã mua</a>
-                                <a th:href="@{/account/change-password}">Đổi mật khẩu</a>
+                        <!-- menu quản lý -->
+                        <div class="horizontal-menu">
+                            <div class="menu-item-header dropdown-header">
+                                <a href="javascript:void(0)" class="menu-link-header">Tài khoản ▼</a>
+                                <div class="dropdown-content-header">
+                                    <a th:href="@{/account}">Thông tin cá nhân</a>
+                                    <a th:href="@{/orders?status=completed}">Sản phẩm đã mua</a>
+                                    <a th:href="@{/account/change-password}">Đổi mật khẩu</a>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="menu-item-header dropdown-header">
-                            <a href="javascript:void(0)" class="menu-link-header">Đơn hàng ▼</a>
-                            <div class="dropdown-content-header">
-                                <a th:href="@{/orders?status=pending}">Chờ xác nhận</a>
-                                <a th:href="@{/orders?status=confirmed}">Chờ giao hàng</a>
-                                <a th:href="@{/orders?status=shipping}">Đang giao</a>
-                                <a th:href="@{/orders?status=delivered}">Đã giao</a>
-                                <a th:href="@{/orders?status=cancelled}">Đã hủy</a>
+                            <div class="menu-item-header dropdown-header">
+                                <a href="javascript:void(0)" class="menu-link-header">Đơn hàng ▼</a>
+                                <div class="dropdown-content-header">
+                                    <a th:href="@{/orders?status=pending}">Chờ xác nhận</a>
+                                    <a th:href="@{/orders?status=confirmed}">Chờ giao hàng</a>
+                                    <a th:href="@{/orders?status=shipping}">Đang giao</a>
+                                    <a th:href="@{/orders?status=delivered}">Đã giao</a>
+                                    <a th:href="@{/orders?status=cancelled}">Đã hủy</a>
+                                </div>
                             </div>
-                        </div>
 
                         <div class="menu-item-header dropdown-header">
                             <a href="javascript:void(0)" class="menu-link-header">Quản lý ▼</a>
@@ -109,20 +116,10 @@
                             <button type="submit" class="btn-logout-header">Đăng xuất</button>
                         </form>
                     </div>
-
-                    <a th:href="@{/cart}" class="cart-icon-header" aria-label="Giỏ hàng">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="cart-svg" aria-hidden="true">
-                            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45
-                                c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45
-                                c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16
-                                16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
-                        </svg>
-                        <span id="cart-count" class="cart-count-badge"
-                              th:text="${session.currentUser != null ? session.cartCount : 0}">0</span>
-                    </a>
                 </div>
             </div>
         </div>
+
     </nav>
 
     <style>

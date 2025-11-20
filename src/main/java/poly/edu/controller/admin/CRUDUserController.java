@@ -6,11 +6,13 @@ import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import poly.edu.entity.Role;
 import poly.edu.entity.User;
+import poly.edu.entity.UserRole;
 import poly.edu.service.UserService;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import poly.edu.dao.RoleDAO;
+import poly.edu.dao.UserRoleDAO;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,104 +23,135 @@ public class CRUDUserController {
     @Autowired
     private UserService userService;
 
-    // Formatter cho dd/MM/yyyy (theo yêu cầu)
-    private static final DateTimeFormatter DOB_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    @Autowired
+    private RoleDAO roleDAO;
 
+    @Autowired
+    private UserRoleDAO userRoleDAO;
+
+    /* ===========================
+     * HIỂN THỊ DANH SÁCH USER
+     * =========================== */
     @GetMapping
     public String index(Model model,
                         @RequestParam(value = "q", required = false) String q) {
+
         List<User> users = userService.findAll();
+
         if (StringUtils.hasText(q)) {
-            String qLower = q.trim().toLowerCase();
+            String keyword = q.toLowerCase();
             users = users.stream()
-                    .filter(u -> (u.getUsername() != null && u.getUsername().toLowerCase().contains(qLower))
-                            || (u.getEmail() != null && u.getEmail().toLowerCase().contains(qLower))
-                            || (u.getPhone() != null && u.getPhone().toLowerCase().contains(qLower)))
+                    .filter(u ->
+                            (u.getUsername() != null && u.getUsername().toLowerCase().contains(keyword)) ||
+                                    (u.getEmail() != null && u.getEmail().toLowerCase().contains(keyword)) ||
+                                    (u.getPhone() != null && u.getPhone().toLowerCase().contains(keyword))
+                    )
                     .collect(Collectors.toList());
         }
+
         model.addAttribute("users", users);
+        model.addAttribute("roles", roleDAO.findAll());
         model.addAttribute("userForm", new User());
         model.addAttribute("searchQuery", q);
+
         return "admin/user";
     }
 
-    /**
-     * Mở form tạo (blank) hoặc edit nếu có id param
-     * GET /admin/user/create?id=...
-     */
-    @GetMapping("/create")
-    public String createForm(@RequestParam(value = "id", required = false) Long id, Model model) {
-        if (id != null) {
-            try {
-                User u = userService.findById(id);
-                model.addAttribute("userForm", u);
-            } catch (Exception ex) {
-                // không tìm thấy -> hiển thị form rỗng kèm thông báo
-                model.addAttribute("userForm", new User());
-                model.addAttribute("error", "Không tìm thấy user với id = " + id);
-            }
-        } else {
-            model.addAttribute("userForm", new User());
+    /* ===========================
+     * MỞ TRANG CREATE / EDIT USER
+     * =========================== */
+    @GetMapping("/edit/{id}")
+    public String edit(@PathVariable("id") Long id, Model model) {
+
+        User user = userService.findById(id);
+        if (user == null) {
+            model.addAttribute("error", "Không tìm thấy user!");
+            return "redirect:/admin/user";
         }
+
+        model.addAttribute("userForm", user);
         model.addAttribute("users", userService.findAll());
+        model.addAttribute("roles", roleDAO.findAll());
+
+        // role hiện tại (nếu có)
+        String currentRole = user.getUserRoles().stream()
+                .map(ur -> ur.getRole().getName())
+                .findFirst()
+                .orElse(null);
+
+        model.addAttribute("currentRole", currentRole);
+
         return "admin/user";
     }
 
-    /**
-     * Lưu (create hoặc update) - dùng POST
-     * POST /admin/user/save/{id}
-     * - Nếu id > 0 => update; nếu id == 0 hoặc null => create
-     * - dateOfBirth được gửi dưới dạng text dd/MM/yyyy (param name: dateOfBirthStr)
-     * - rawPassword: nếu rỗng khi update => giữ mật khẩu cũ
-     */
-    @PostMapping("/save/{id}")
-    public String save(@PathVariable("id") Long id,
-                       @ModelAttribute("userForm") User form,
+    /* ===========================
+     * LƯU USER (CREATE + UPDATE)
+     * =========================== */
+    @PostMapping("/save")
+    public String save(@ModelAttribute("userForm") User form,
+                       @RequestParam(value = "roleId") String roleId,
                        @RequestParam(value = "rawPassword", required = false) String rawPassword,
-                       Model model,
-                       RedirectAttributes redirectAttrs) {
+                       RedirectAttributes redirectAttrs,
+                       Model model) {
 
-        // BASIC validation (as before)
+        // ===== VALIDATION CƠ BẢN =====
         if (!StringUtils.hasText(form.getUsername())) {
             model.addAttribute("error", "Chưa nhập username");
-            model.addAttribute("users", userService.findAll());
-            model.addAttribute("userForm", form);
-            return "admin/user";
+            return reload(model);
         }
         if (!StringUtils.hasText(form.getEmail())) {
             model.addAttribute("error", "Chưa nhập email");
-            model.addAttribute("users", userService.findAll());
-            model.addAttribute("userForm", form);
-            return "admin/user";
+            return reload(model);
         }
         if (!StringUtils.hasText(form.getFullName())) {
             model.addAttribute("error", "Chưa nhập họ tên");
-            model.addAttribute("users", userService.findAll());
-            model.addAttribute("userForm", form);
-            return "admin/user";
-        }
-        if (!StringUtils.hasText(form.getPhone())) {
-            model.addAttribute("error", "Chưa nhập số điện thoại");
-            model.addAttribute("users", userService.findAll());
-            model.addAttribute("userForm", form);
-            return "admin/user";
+            return reload(model);
         }
 
         try {
-            if (id != null && id > 0) {
-                // UPDATE
-                User exist = userService.findById(id);
-                if (!exist.getUsername().equals(form.getUsername()) && userService.existsByUsername(form.getUsername())) {
-                    model.addAttribute("error", "Username đã tồn tại");
-                    model.addAttribute("users", userService.findAll());
-                    model.addAttribute("userForm", form);
-                    return "admin/user";
+            boolean isNew = (form.getUserId() == null);
+
+            if (isNew) {
+                // ========== CREATE ==========
+                if (!StringUtils.hasText(rawPassword)) {
+                    model.addAttribute("error", "Chưa nhập password cho user mới");
+                    return reload(model);
                 }
-                if (!exist.getEmail().equals(form.getEmail()) && userService.existsByEmail(form.getEmail())) {
+
+                if (userService.existsByUsername(form.getUsername())) {
+                    model.addAttribute("error", "Username đã tồn tại");
+                    return reload(model);
+                }
+                if (userService.existsByEmail(form.getEmail())) {
                     model.addAttribute("error", "Email đã tồn tại");
-                    model.addAttribute("users", userService.findAll());
-                    model.addAttribute("userForm", form);
-                    return "admin/user";
+                    return reload(model);
+                }
+
+                // dùng password raw
+                form.setPassword(rawPassword);
+
+                // Lưu user trước
+                User saved = userService.create(form);
+
+                // Gán role
+                assignRole(saved, roleId);
+
+                redirectAttrs.addFlashAttribute("msg", "Tạo user mới thành công!");
+
+            } else {
+                // ========== UPDATE ==========
+                User exist = userService.findById(form.getUserId());
+
+                if (!exist.getUsername().equals(form.getUsername()) &&
+                        userService.existsByUsername(form.getUsername())) {
+                    model.addAttribute("error", "Username đã tồn tại");
+                    return reload(model);
+                }
+
+                if (!exist.getEmail().equals(form.getEmail()) &&
+                        userService.existsByEmail(form.getEmail())) {
+                    model.addAttribute("error", "Email đã tồn tại");
+                    return reload(model);
                 }
 
                 // cập nhật fields
@@ -126,72 +159,77 @@ public class CRUDUserController {
                 exist.setEmail(form.getEmail());
                 exist.setFullName(form.getFullName());
                 exist.setGender(form.getGender());
-                exist.setDateOfBirth(form.getDateOfBirth()); // trực tiếp binding từ input[type=date]
+                exist.setDateOfBirth(form.getDateOfBirth());
                 exist.setPhone(form.getPhone());
                 exist.setAddress(form.getAddress());
-                exist.setRole(form.getRole());
                 exist.setProvider(form.getProvider());
                 exist.setProviderId(form.getProviderId());
+
+                // cập nhật password (nếu nhập)
                 if (StringUtils.hasText(rawPassword)) {
                     exist.setPassword(rawPassword);
                 }
+
                 userService.update(exist);
 
-                // flash message cho redirect
-                redirectAttrs.addFlashAttribute("msg", "Cập nhật user thành công.");
-            } else {
-                // CREATE
-                if (!StringUtils.hasText(rawPassword) && !StringUtils.hasText(form.getPassword())) {
-                    model.addAttribute("error", "Chưa nhập password cho user mới");
-                    model.addAttribute("users", userService.findAll());
-                    model.addAttribute("userForm", form);
-                    return "admin/user";
-                }
-                if (!StringUtils.hasText(form.getPassword()) && StringUtils.hasText(rawPassword)) {
-                    form.setPassword(rawPassword);
-                }
-                if (userService.existsByUsername(form.getUsername())) {
-                    model.addAttribute("error", "Username đã tồn tại");
-                    model.addAttribute("users", userService.findAll());
-                    model.addAttribute("userForm", form);
-                    return "admin/user";
-                }
-                if (userService.existsByEmail(form.getEmail())) {
-                    model.addAttribute("error", "Email đã tồn tại");
-                    model.addAttribute("users", userService.findAll());
-                    model.addAttribute("userForm", form);
-                    return "admin/user";
-                }
-                userService.create(form);
+                // cập nhật role
+                assignRole(exist, roleId);
 
-                // flash message cho redirect
-                redirectAttrs.addFlashAttribute("msg", "Tạo user mới thành công.");
+                redirectAttrs.addFlashAttribute("msg", "Cập nhật user thành công!");
             }
+
             return "redirect:/admin/user";
+
         } catch (Exception ex) {
             model.addAttribute("error", "Lỗi khi lưu user: " + ex.getMessage());
-            model.addAttribute("users", userService.findAll());
-            model.addAttribute("userForm", form);
-            return "admin/user";
+            return reload(model);
         }
     }
 
-
-    /**
-     * Xoá user bằng POST
-     * POST /admin/user/delete/{id}
-     */
+    /* ===========================
+     * XÓA USER
+     * =========================== */
     @PostMapping("/delete/{id}")
-    public String delete(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttrs) {
+    public String delete(@PathVariable("id") Long id,
+                         RedirectAttributes redirectAttrs,
+                         Model model) {
+
         try {
             userService.deleteById(id);
-            redirectAttrs.addFlashAttribute("msg", "Xóa user thành công.");
+            redirectAttrs.addFlashAttribute("msg", "Xóa user thành công!");
             return "redirect:/admin/user";
+
         } catch (Exception ex) {
             model.addAttribute("error", "Lỗi khi xóa: " + ex.getMessage());
-            model.addAttribute("users", userService.findAll());
-            model.addAttribute("userForm", new User());
-            return "admin/user";
+            return reload(model);
         }
+    }
+
+    /* ===========================
+     * HÀM PHỤ: GÁN ROLE
+     * =========================== */
+    private void assignRole(User user, String roleId) {
+
+        // Xóa role cũ
+        userRoleDAO.deleteAllByUser(user);
+
+        Role role = roleDAO.findById(roleId)
+                .orElseThrow(() -> new RuntimeException("Role không tồn tại: " + roleId));
+
+        UserRole ur = UserRole.builder()
+                .user(user)
+                .role(role)
+                .build();
+
+        userRoleDAO.save(ur);
+    }
+
+    /* ===========================
+     * HÀM PHỤ: LOAD LẠI DỮ LIỆU SAU LỖI
+     * =========================== */
+    private String reload(Model model) {
+        model.addAttribute("users", userService.findAll());
+        model.addAttribute("roles", roleDAO.findAll());
+        return "admin/user";
     }
 }

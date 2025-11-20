@@ -25,7 +25,7 @@ public class HomeController {
     private ProductDAO productDAO;
 
     // Link: http://localhost:8080/home
-    @GetMapping("/home")
+    @GetMapping("/")
     public String home(
             @RequestParam(value = "newPage", required = false) Integer newPageParam,
             @RequestParam(value = "salePage", required = false) Integer salePageParam,
