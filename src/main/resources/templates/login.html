@@ -19,6 +19,35 @@
             padding: 20px;
         }
 
+        .btn-google {
+            width: 100%;
+            padding: 14px;
+            background-color: white;
+            color: #333;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-google:hover {
+            border-color: #667eea;
+            background-color: #f9f9f9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .google-icon {
+            width: 20px;
+            height: 20px;
+        }
+
         .login-container {
             background-color: white;
             border-radius: 20px;
@@ -220,6 +249,11 @@
         </div>
 
         <div class="divider"><span>HOẶC</span></div>
+
+        <a th:href="@{/oauth2/authorization/google}" class="btn-google">
+            <!-- same SVG icon -->
+            Đăng nhập bằng Google
+        </a>
 
         <div class="register-link">
             Chưa có tài khoản? <a href="/register">Đăng ký ngay</a>

@@ -72,7 +72,7 @@ public class RegisterController {
         userDAO.save(user);
 
         // 🚀 Gán ROLE_USER mặc định
-        Role roleUser = roleDAO.findById("USER")
+        Role roleUser = roleDAO.findById("ROLE_USER")
                 .orElseThrow(() -> new RuntimeException("ROLE_USER not found in DB"));
 
         UserRole ur = UserRole.builder()

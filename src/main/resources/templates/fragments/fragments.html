@@ -32,7 +32,7 @@
                 <!-- Nếu là USER -->
                 <div sec:authorize="hasRole('USER') and !hasRole('ADMIN')" class="user-menu-section">
                     <div class="welcome-text">
-                        Xin chào, <span sec:authentication="name">User</span>
+                        Xin chào, <span sec:authentication="principal.attributes['username']">User</span>
                     </div>
 
                     <div class="horizontal-menu">
